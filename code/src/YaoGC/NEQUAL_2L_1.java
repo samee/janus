@@ -5,13 +5,13 @@ package YaoGC;
 import java.math.*;
 import Utils.*;
 
-public class EQUAL_2L_1 extends CompositeCircuit {
+public class NEQUAL_2L_1 extends CompositeCircuit {
 	private final int L;
 	static final int XOR = 0;
 	static final int OR = 1;
 
-	public EQUAL_2L_1(int l) {
-		super(2 * l, 1, 2, "EQUAL");
+	public NEQUAL_2L_1(int l) {
+		super(2 * l, 1, 2, "NEQUAL");
 
 		L = l;
 	}
@@ -52,7 +52,7 @@ public class EQUAL_2L_1 extends CompositeCircuit {
 			else if (out.equals(Wire.conjugate(s.wires[0].lbl)))
 				res = ((s.wires[0].invd) ? true : false);
 			else {
-				System.err.println("Error: Unrecognized label.");
+				//System.err.println("Error: Unrecognized label.");
 				(new Exception()).printStackTrace();
 				System.exit(1);
 			}

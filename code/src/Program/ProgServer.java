@@ -69,9 +69,6 @@ public abstract class ProgServer extends Program {
     protected void createCircuits() throws Exception {
 	Circuit.isForGarbling = true;
 	Circuit.setIOStream(ProgCommon.ois, ProgCommon.oos);
-	for (int i = 0; i < ProgCommon.ccs.length; i++) {
-	    ProgCommon.ccs[i].build();
-	}
 	
 	StopWatch.taskTimeStamp("circuit preparation");
     }

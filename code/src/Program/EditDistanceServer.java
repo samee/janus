@@ -19,6 +19,7 @@ public class EditDistanceServer extends ProgServer {
 	public EditDistanceServer(BigInteger dna, BigInteger secMask, int length) {
 		sdna = dna;
 		ssecmask = secMask;
+                cSecBitLen = 0;
 
 		// length of dna sequence. Effective bit length of variable dna is sigma
 		// times longer
@@ -26,6 +27,8 @@ public class EditDistanceServer extends ProgServer {
 
 		EditDistanceCommon.strSdna = EditDistanceServer.biToString(sdna,
 				secMask, EditDistanceCommon.sigma, EditDistanceCommon.sdnaLen);
+                assert EditDistanceCommon.sdnaLen 
+                  == EditDistanceCommon.strSdna.length();
 	}
 
 	protected void init() throws Exception {
@@ -37,11 +40,12 @@ public class EditDistanceServer extends ProgServer {
 		EditDistanceCommon.oos.writeObject(ssecmask);
 		EditDistanceCommon.oos.flush();
 
+		super.init();
+
 		EditDistanceCommon.initCircuits();
 
 		generateLabelPairsForDNAs();
 
-		super.init();
 	}
 
 	private void generateLabelPairsForDNAs() {
@@ -50,24 +54,23 @@ public class EditDistanceServer extends ProgServer {
 		cdnalps = new BigInteger[EditDistanceCommon.sigma
 				* EditDistanceCommon.cdnaLen][2];
 
-		for (int i = 0; i < EditDistanceCommon.sdnaLen; i++) {
+		for (int i = 0; i < sdnalps.length; i++) {
 			if (ssecmask.testBit(i))
-				for (int j = 0; j < EditDistanceCommon.sigma; j++)
-					sdnalps[EditDistanceCommon.sigma * i + j] = Wire
+					sdnalps[i] = Wire
 							.newLabelPair();
 			else
-				for (int j = 0; j < EditDistanceCommon.sigma; j++)
-					sdnalps[EditDistanceCommon.sigma * i + j] = null;
+					sdnalps[i] = null;
 		}
 
-		for (int i = 0; i < EditDistanceCommon.cdnaLen; i++) {
+		for (int i = 0; i < cdnalps.length; i++) {
 			if (csecmask.testBit(i))
-				for (int j = 0; j < EditDistanceCommon.sigma; j++)
-					cdnalps[EditDistanceCommon.sigma * i + j] = Wire
+                        { 
+					cdnalps[i] = Wire
 							.newLabelPair();
+                                        cSecBitLen++;
+                        }
 			else
-				for (int j = 0; j < EditDistanceCommon.sigma; j++)
-					cdnalps[EditDistanceCommon.sigma * i + j] = null;
+					cdnalps[i] = null;
 		}
 	}
 
@@ -81,15 +84,38 @@ public class EditDistanceServer extends ProgServer {
 						EditDistanceCommon.oos);
 			}
 		}
+
 		EditDistanceCommon.oos.flush();
 		StopWatch.taskTimeStamp("sending labels for selfs inputs");
 
-		BigInteger[][] temp = new BigInteger[cSecBitLen][2];
+                /*
+                System.err.println("Server DNA: ");
+                for(int i=0;i<EditDistanceCommon.sdnaLen*
+                    EditDistanceCommon.sigma;++i)
+                  System.err.print(sdna.testBit(i)?1:0);
+                System.err.println();
+                */
+
+		BigInteger[][] temp 
+                  = new BigInteger[cSecBitLen][2];
 		for (int i = 0, j = 0; i < cdnalps.length; i++)
 			if (csecmask.testBit(i))
 				temp[j++] = cdnalps[i];
 		snder.execProtocol(temp);
 		StopWatch.taskTimeStamp("sending labels for peers inputs");
+
+                /*
+                System.err.println("Server labels:");
+                for(int i=0;i<sdnalps.length;++i)
+                  if (ssecmask.testBit(i))
+                    System.err.println(sdnalps[i][sdna.testBit(i)?1:0]);
+                  else System.err.println("null");
+                System.err.println("Oblivious send:");
+                for(int i=0;i<cdnalps.length;++i)
+                  if(csecmask.testBit(i))
+                    System.err.println(cdnalps[i][0]+" "+cdnalps[i][1]);
+                  else System.err.println("null");
+                  */
 	}
 
 	protected void execCircuit() throws Exception {
@@ -99,9 +125,11 @@ public class EditDistanceServer extends ProgServer {
 				* EditDistanceCommon.cdnaLen];
 
 		for (int i = 0; i < sdnalps.length; i++)
+                  if(sdnalps[i]!=null)
 			sdnalbs[i] = sdnalps[i][0];
 
 		for (int i = 0; i < cdnalps.length; i++)
+                  if(cdnalps[i]!=null)
 			cdnalbs[i] = cdnalps[i][0];
 
 		outputState = EditDistanceCommon.execCircuit(sdnalbs, cdnalbs);
@@ -147,8 +175,8 @@ public class EditDistanceServer extends ProgServer {
 				BigInteger.ONE);
 
 		for (int i = 0; i < n; i++) {
-			res.append((char) encoding.shiftRight(i * sigma).and(mask)
-					.intValue() + 36); // offset by 36 because '#' is used as a
+			res.append((char) (encoding.shiftRight(i * sigma).and(mask)
+					.intValue() +'A')); // offset by 36 because '#' is used as a
 										// special character that stands for a
 										// symbolic value
 		}
@@ -165,8 +193,8 @@ public class EditDistanceServer extends ProgServer {
 			if (secMask.testBit(sigma * i)) // '1' implies secret
 				res.append('#');
 			else
-				res.append((char) encoding.shiftRight(i * sigma).and(mask)
-						.intValue() + 36); // offset by 36 because '#' is used
+				res.append((char) (encoding.shiftRight(i * sigma).and(mask)
+						.intValue() + 'A')); // offset by 36 because '#' is used
 			// as a special character that
 			// stands for a symbolic value
 		}
@@ -180,6 +208,9 @@ public class EditDistanceServer extends ProgServer {
 				EditDistanceCommon.sdnaLen);
 		String cdnaStr = biToString(cdna, EditDistanceCommon.sigma,
 				EditDistanceCommon.cdnaLen);
+                System.err.println("Full data:");
+                System.err.println("  Server: "+sdnaStr);
+                System.err.println("  Client: "+cdnaStr);
 
 		int[][] D = new int[EditDistanceCommon.sdnaLen + 1][EditDistanceCommon.cdnaLen + 1];
 

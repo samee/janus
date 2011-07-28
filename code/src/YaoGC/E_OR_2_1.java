@@ -25,6 +25,7 @@ class E_OR_2_1 extends OR_2_1 {
 	BigInteger out = Cipher.decrypt(inWireL.lbl, inWireR.lbl, 
 					outWire.serialNum, gtt[i0][i1]);
 	
+        //System.err.println("Plain: "+out);
 	outWire.setLabel(out);
     }
 }

@@ -33,6 +33,8 @@ abstract public class Circuit implements TransitiveObserver {
 		Circuit.oos = oos;
 	}
 
+        public String getName() { return name; }
+
 	abstract public void build() throws Exception;
 
 	protected void createInputWires() {
@@ -60,10 +62,11 @@ abstract public class Circuit implements TransitiveObserver {
 				+ s.getWidth() + " != " + inDegree;
 
 		for (int i = 0; i < this.inDegree; i++) {
-			// assert (s.wires[i] != null) : "" + i;
-			// assert inputWires[i] != null : "" + i;
+			assert (s.wires[i] != null) : "" + i;
+			assert inputWires[i] != null : "" + i;
 			inputWires[i].value = s.wires[i].value;
 			inputWires[i].invd = s.wires[i].invd;
+                        assert s.wires[i].lbl!=null;
 			inputWires[i].setLabel(s.wires[i].lbl);
 			inputWires[i].setReady();
 		}

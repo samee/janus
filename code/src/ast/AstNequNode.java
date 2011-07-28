@@ -30,4 +30,7 @@ public class AstNequNode implements AstNodeData {
 	public static AstNode create(String strA, int indA, String strB, int indB) {
 		return new AstNode(new AstNequNode(strA, indA, strB, indB));
 	}
+
+        public int hashCode()
+          { return a.chHash()^b.chHash(); }
 }

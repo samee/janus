@@ -42,7 +42,6 @@ public class Wire extends TransitiveObservable {
     public static BigInteger conjugate(BigInteger label) {
 	if (label == null)
 	    return null;
-
 	return label.xor(R.shiftLeft(1).setBit(0));
     }
 

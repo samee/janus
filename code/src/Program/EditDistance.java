@@ -13,7 +13,7 @@ import ast.AstValueNode;
 public class EditDistance {
 	private String a, b;
 	private AstNode root;
-
+        private AstReducer reducer;
 	public EditDistance(String a, String b) {
 		int ai, bi, an = a.length(), bn = b.length();
 		this.a = a;
@@ -21,7 +21,7 @@ public class EditDistance {
 
 		// 1D array to avoid O(n^2) memory use if possible
 		AstNode cur[] = new AstNode[bn + 1], next[] = new AstNode[bn + 1];
-		AstReducer reducer = new AstReducer(); // the optimizer
+		reducer = new AstReducer(); // the optimizer
 
 		for (bi = 0; bi <= bn; ++bi) {
 			cur[bi] = AstValueNode.create(bi);
@@ -62,6 +62,11 @@ public class EditDistance {
 	public String getInputB() {
 		return b;
 	}
+
+        public int nodeUpperLim(AstNode node) 
+          { return reducer.nodeValueUpperLim(node); }
+        public int nodeLowerLim(AstNode node) 
+          { return reducer.nodeValueLowerLim(node); }
 
 	// test harness
 	public static void main(String args[]) {

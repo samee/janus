@@ -1,9 +1,23 @@
 package ast;
 
+import java.math.BigInteger;
 import Program.EditDistance;
 import YaoGC.State;
 
 public class AstGCExecutor {
+
+        private BigInteger[] sdnalbs, cdnalbs;
+        private AstVisitedMap<NodeData[]> visited;
+
+        // Should return the number of bits required to represent 
+        //   any given node
+        public static interface BitSizeCalculator
+        {
+          public int bitsFor(AstNode node);
+        }
+
+        private BitSizeCalculator bitSize;
+
 	// Change this class to hold any info you need
 	// e.g. References to garbled circuit objects
 	public static class NodeData {
@@ -13,7 +27,9 @@ public class AstGCExecutor {
 				NodeData childRight) {
 
 			 if (current.getType()==AstAddNode.class)
-				 executeADD();
+                         {  Circuit cir = new ADD_2L_Lplus1(bitSize.bitsFor(current));
+                           // TODO
+                         }
 			 else if(current.getType()==AstMinNode.class) 
 				 executeMIN();
 			 else if (current.getType()==AstMaxNode.class) 
@@ -56,15 +72,24 @@ public class AstGCExecutor {
 
 	}
 
-	// ---------- You shouldn't have to modify anything beyond this -------
 	/** The only public method in this class :) . */
-	public static NodeData execute(AstNode root) {
-		AstVisitedMap<NodeData[]> visited = new AstVisitedMap<NodeData[]>();
-		return executeSubtree(root, visited);
+	public static NodeData execute(BigInteger[] sdnalbs, 
+            BigInteger[] cdnalbs, AstNode root) 
+        {
+          AstGCExecutor exec = new AstGCExecutor(sdnalbs,cdnalbs);
+          return exec.executeSubtree(root);
 	}
 
-	private static NodeData executeSubtree(AstNode node,
-			AstVisitedMap<NodeData[]> visited) {
+        private AstGCExecutor(BigInteger[] sdnalbs,BigInteger[] cdnalbs,
+            BitSizeCalculator bitSize)
+        { this.sdnalbs = sdnalbs;
+          this.cdnalbs = cdnalbs;
+          this.bitSize = bitSize;
+          this.visited = new AstVisitedMap<NodeData[]>();
+        }
+
+	private NodeData executeSubtree(AstNode node)
+        {
 		// If I have already visited this node, return reference to
 		// previously computed object
 		if (visited.isVisited(node))

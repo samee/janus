@@ -15,4 +15,12 @@ public class AstMinNode implements AstNodeData {
 	public static AstNode create(AstNode[] children) {
 		return new AstNode(new AstMinNode(children));
 	}
+
+        public int hashCode()
+        {
+          int rv="Min".hashCode();
+          for(AstNode child:children)
+            rv^=child.hashCode();
+          return rv;
+        }
 }

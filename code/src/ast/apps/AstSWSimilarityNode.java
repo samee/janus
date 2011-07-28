@@ -44,6 +44,9 @@ public class AstSWSimilarityNode implements AstNodeData {
 		assert !a.isSymbolic() && !b.isSymbolic() : "SmithWaterman similarity evaluation cannot be done on symbolics";
 		return evalChar(a.getChar(), b.getChar());
 	}
+        public int hashCode() {
+          return a.chHash()^b.chHash();
+        }
 
 	// convenience constructor
 	public static AstNode create(String strA, int indA, String strB, int indB) {

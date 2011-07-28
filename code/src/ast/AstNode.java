@@ -26,4 +26,5 @@ public class AstNode {
 	public AstNode[] children() {
 		return data.childNodes();
 	}
+        public int hashCode() { return data.hashCode(); }
 }

@@ -21,4 +21,5 @@ public class AstValueNode implements AstNodeData {
 	public static AstNode create(int v) {
 		return new AstNode(new AstValueNode(v));
 	}
+        public int hashCode() { return new Integer(value).hashCode(); }
 }

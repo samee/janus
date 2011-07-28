@@ -71,10 +71,14 @@ public abstract class SimpleCircuit_2_1 extends Circuit {
 
 			} else {
 				execYao();
+                                /*
+                                if(!Circuit.isForGarbling)
+                                  System.err.println(outputWires[0].lbl);
+                                  */
+                                //debugPrint();
 			}
 		}
 
-		// debugPrint();
 
 		outWire.setReady();
 	}
@@ -91,7 +95,10 @@ public abstract class SimpleCircuit_2_1 extends Circuit {
 			Utils.writeBigInteger(gtt[0][1], bytelength, oos);
 			Utils.writeBigInteger(gtt[1][0], bytelength, oos);
 			Utils.writeBigInteger(gtt[1][1], bytelength, oos);
-
+                        /*
+                        System.err.println(gtt[0][1]+" "+
+                            gtt[1][0]+" "+gtt[1][1]);
+                        */
 			oos.flush();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -108,6 +115,11 @@ public abstract class SimpleCircuit_2_1 extends Circuit {
 			gtt[0][1] = Utils.readBigInteger(bytelength, ois);
 			gtt[1][0] = Utils.readBigInteger(bytelength, ois);
 			gtt[1][1] = Utils.readBigInteger(bytelength, ois);
+                        /*
+                        System.err.println("Recvd: "+gtt[0][0]+" "
+                            +gtt[0][1]+" "+
+                            gtt[1][0]+" "+gtt[1][1]);
+                            */
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -138,6 +150,11 @@ public abstract class SimpleCircuit_2_1 extends Circuit {
 		int cL = inWireL.lbl.testBit(0) ? 1 : 0;
 		int cR = inWireR.lbl.testBit(0) ? 1 : 0;
 
+                /*
+                System.err.println("Plain: " + gtt[0][0]+" "+gtt[0][1]+" "+
+                    gtt[1][0]+" "+gtt[1][1]+"  permutes "+cL+" "+cR);
+                    */
+
 		if (cL != 0 || cR != 0)
 			gtt[0 ^ cL][0 ^ cR] = Cipher.encrypt(labelL[0], labelR[0], k,
 					gtt[0 ^ cL][0 ^ cR]);
@@ -150,6 +167,12 @@ public abstract class SimpleCircuit_2_1 extends Circuit {
 		if (cL != 1 || cR != 1)
 			gtt[1 ^ cL][1 ^ cR] = Cipher.encrypt(labelL[1], labelR[1], k,
 					gtt[1 ^ cL][1 ^ cR]);
+                assert Cipher.encrypt(labelL[cL],labelR[cR],k,gtt[0][0])
+                  .equals(BigInteger.ZERO);
+                /*
+                System.err.println("Ciphr: 0 "+gtt[0][1]+" "+
+                    gtt[1][0]+" "+gtt[1][1]+"  permutes "+cL+" "+cR);
+                    */
 	}
 
 	private void debugPrint() {

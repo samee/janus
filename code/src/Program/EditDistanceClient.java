@@ -23,6 +23,10 @@ public class EditDistanceClient extends ProgClient {
 
 		EditDistanceCommon.strCdna = EditDistanceServer.biToString(cdna,
 				secMask, EditDistanceCommon.sigma, EditDistanceCommon.cdnaLen);
+                cSecBitLen=0;
+                for(int i=0;i<EditDistanceCommon.strCdna.length();++i) 
+                  if(EditDistanceCommon.strCdna.charAt(i)=='#')
+                    cSecBitLen+=EditDistanceCommon.sigma;
 	}
 
 	protected void init() throws Exception {
@@ -36,7 +40,7 @@ public class EditDistanceClient extends ProgClient {
 
 		EditDistanceCommon.initCircuits();
 
-		otNumOfPairs = EditDistanceCommon.sigma * EditDistanceCommon.cdnaLen;
+		otNumOfPairs = cSecBitLen;
 
 		super.init();
 	}
@@ -61,7 +65,7 @@ public class EditDistanceClient extends ProgClient {
 		for (int i = 0, j = 0; i < cdnalbs.length; i++)
 			if (csecmask.testBit(i)) {
 				if (cdna.testBit(i))
-					tmpchoice.setBit(j);
+					tmpchoice = tmpchoice.setBit(j);
 				j++;
 			}
 
@@ -71,6 +75,20 @@ public class EditDistanceClient extends ProgClient {
 			if (csecmask.testBit(i))
 				cdnalbs[i] = temp[j++];
 
+                /*
+                System.err.println("Client DNA: ");
+                for(int i=0;i<EditDistanceCommon.cdnaLen
+                    *EditDistanceCommon.sigma;++i)
+                  System.err.print(cdna.testBit(i)?1:0);
+                System.err.println();
+                System.err.println("Server labels:");
+                for(int i=0;i<sdnalbs.length;++i)
+                  System.err.println(sdnalbs[i]);
+                System.err.println("Oblivious recv:");
+                for(int i=0;i<cdnalbs.length;++i)
+                  System.err.println(cdnalbs[i]);
+                  */
+
 		StopWatch.taskTimeStamp("receiving labels for self's inputs");
 	}
 
@@ -79,7 +97,7 @@ public class EditDistanceClient extends ProgClient {
 	}
 
 	protected void interpretResult() throws Exception {
-		EditDistanceCommon.oos.writeObject(outputState.wires);
+		EditDistanceCommon.oos.writeObject(outputState.toLabels());
 		EditDistanceCommon.oos.flush();
 	}
 

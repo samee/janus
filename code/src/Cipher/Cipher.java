@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import YaoGC.Wire;
 
 public final class Cipher {
-	private static final int unitLength = 128; // SHA-1 has 160-bit output.
+	private static final int unitLength = 160; // SHA-1 has 160-bit output.
 
 	private static final BigInteger mask = BigInteger.ONE.shiftLeft(
 			Wire.labelBitLength).subtract(BigInteger.ONE);
@@ -16,7 +16,7 @@ public final class Cipher {
 
 	static {
 		try {
-			sha1 = MessageDigest.getInstance("md5");
+			sha1 = MessageDigest.getInstance("SHA-1");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -42,9 +42,8 @@ public final class Cipher {
 	// this padding generation function is dedicated for encrypting garbled
 	// tables.
 	private static BigInteger getPadding(BigInteger lp0, BigInteger lp1, int k) {
-		sha1.update(lp0.xor(lp1).toByteArray());
-		// sha1.update(lp0.toByteArray());
-		// sha1.update(lp1.toByteArray());
+		sha1.update(lp0.toByteArray());
+		sha1.update(lp1.toByteArray());
 		sha1.update(BigInteger.valueOf(k).toByteArray());
 		return (new BigInteger(sha1.digest())).and(mask);
 	}

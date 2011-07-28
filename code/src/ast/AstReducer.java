@@ -136,4 +136,21 @@ public class AstReducer {
 				rv.add(mychildren[i]);
 		return rv;
 	}
+
+        public static class UnknownNodeException extends RuntimeException
+        {
+          UnknownNodeException() { super(); }
+        }
+
+        // Methods for post-reduce metadata
+        public int nodeValueUpperLim(AstNode node)
+        {
+          if(!visited.isVisited(node)) throw new UnknownNodeException();
+          return visited.valueAt(node).upperLim;
+        }
+        public int nodeValueLowerLim(AstNode node)
+        {
+          if(!visited.isVisited(node)) throw new UnknownNodeException();
+          return visited.valueAt(node).lowerLim;
+        }
 }

@@ -48,10 +48,6 @@ public abstract class ProgClient extends Program {
     protected void createCircuits() throws Exception {
 	Circuit.isForGarbling = false;
 	Circuit.setIOStream(ProgCommon.ois, ProgCommon.oos);
-	for (int i = 0; i < ProgCommon.ccs.length; i++) {
-	    ProgCommon.ccs[i].build();
-	}
-
 	StopWatch.taskTimeStamp("circuit preparation");
     }
 

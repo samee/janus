@@ -60,35 +60,45 @@ public class XOR_2_1 extends SimpleCircuit_2_1 {
 	    }
 	}
 
-	// System.out.print("XOR: " + Color.blue);
-	// if (inWireL.value == Wire.UNKNOWN_SIG) 
-	//     System.out.print("(" + 
-	// 		     ((!inWireL.invd) ? 
-	// 		      (inWireL.lbl + ", " + Wire.conjugate(inWireL.lbl)) :
-	// 		      (Wire.conjugate(inWireL.lbl) + ", " + inWireL.lbl))
-	// 		     + ") XOR ");
-	// else
-	//     System.out.print(inWireL.value + " XOR ");
+        /*
+        if(inWireL.value == Wire.UNKNOWN_SIG && inWireR.value == Wire.UNKNOWN_SIG)
+        {
+          System.out.print("XOR: ");
+          if(Circuit.isForGarbling)
+          {
+            if (inWireL.value == Wire.UNKNOWN_SIG) 
+                System.out.print("(" + 
+                                 ((!inWireL.invd) ? 
+                                  (inWireL.lbl + ", " + Wire.conjugate(inWireL.lbl)) :
+                                  (Wire.conjugate(inWireL.lbl) + ", " + inWireL.lbl))
+                                 + ") XOR ");
+            else
+                System.out.print(inWireL.value + " XOR ");
 
-	// if (inWireR.value == Wire.UNKNOWN_SIG)
-	//     System.out.print("(" + 
-	// 		     ((!inWireR.invd) ? 
-	// 		      (inWireR.lbl + ", " + Wire.conjugate(inWireR.lbl)) :
-	// 		      (Wire.conjugate(inWireR.lbl) + ", " + inWireR.lbl))
-	// 		     + ") = ");
-	// else
-	//     System.out.print(inWireR.value + " = ");
+            if (inWireR.value == Wire.UNKNOWN_SIG)
+                System.out.print("(" + 
+                                 ((!inWireR.invd) ? 
+                                  (inWireR.lbl + ", " + Wire.conjugate(inWireR.lbl)) :
+                                  (Wire.conjugate(inWireR.lbl) + ", " + inWireR.lbl))
+                                 + ") = ");
+            else
+                System.out.print(inWireR.value + " = ");
 
-	// if (outWire.value == Wire.UNKNOWN_SIG)
-	//     System.out.print("(" + 
-	// 		     ((!outWire.invd) ? 
-	// 		      (outWire.lbl + ", " + Wire.conjugate(outWire.lbl)) :
-	// 		      (Wire.conjugate(outWire.lbl) + ", " + outWire.lbl))
-	// 		     + ").");
-	// else
-	//     System.out.print(outWire.value + ".");
-	// System.out.println(Color.black);
-
+            if (outWire.value == Wire.UNKNOWN_SIG)
+                System.out.print("(" + 
+                                 ((!outWire.invd) ? 
+                                  (outWire.lbl + ", " + Wire.conjugate(outWire.lbl)) :
+                                  (Wire.conjugate(outWire.lbl) + ", " + outWire.lbl))
+                                 + ").");
+            else
+                System.out.print(outWire.value + ".");
+          }else
+          { System.out.print(inWireL.lbl+" XOR "+inWireR.lbl
+              +" = "+outWire.lbl+". ");
+          }
+          System.out.println();
+        }
+*/
 	outWire.setReady();
     }
 

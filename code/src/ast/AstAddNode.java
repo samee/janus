@@ -15,4 +15,12 @@ public class AstAddNode implements AstNodeData {
 	public static AstNode create(AstNode[] children) {
 		return new AstNode(new AstAddNode(children));
 	}
+
+        public int hashCode()
+        {
+          int rv="Add".hashCode();
+          for(AstNode child:children)
+            rv^=child.hashCode();
+          return rv;
+        }
 }

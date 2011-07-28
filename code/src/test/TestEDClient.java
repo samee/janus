@@ -9,6 +9,7 @@ import jargs.gnu.CmdLineParser;
 
 import Utils.*;
 import Program.*;
+import YaoGC.Wire;
 
 class TestEDClient {
 	static BigInteger dna;
@@ -24,6 +25,8 @@ class TestEDClient {
 	}
 
 	private static void process_cmdline_args(String[] args) {
+          Wire.labelBitLength = 32;
+                Wire.R = new java.math.BigInteger(Wire.labelBitLength-1,Wire.rnd);
 		CmdLineParser parser = new CmdLineParser();
 		CmdLineParser.Option optionServerIPname = parser.addStringOption('s',
 				"server");
@@ -35,6 +38,8 @@ class TestEDClient {
 				"iteration");
 		CmdLineParser.Option optionSigma = parser
 				.addIntegerOption('g', "sigma");
+                CmdLineParser.Option optionSeed 
+                  = parser.addLongOption('q',"seed");
 
 		try {
 			parser.parse(args);
@@ -53,6 +58,8 @@ class TestEDClient {
 				new Integer(10))).intValue();
 		EditDistanceCommon.sigma = ((Integer) parser.getOptionValue(
 				optionSigma, new Integer(2))).intValue();
+                Long seed = (Long ) parser.getOptionValue(optionSeed);
+                if(seed!=null) rnd = new Random(seed);
 	}
 
 	private static void generateData() throws Exception {
