@@ -38,9 +38,8 @@ public class EditDistanceClient extends ProgClient {
 		EditDistanceCommon.strSdna = (String) EditDistanceCommon.ois.readObject();
 		ssecmask= (BigInteger) EditDistanceCommon.ois.readObject();
 
-		EditDistanceCommon.initCircuits();
-
 		otNumOfPairs = cSecBitLen;
+
 
 		super.init();
 	}
@@ -93,6 +92,7 @@ public class EditDistanceClient extends ProgClient {
 	}
 
 	protected void execCircuit() throws Exception {
+		EditDistanceCommon.initCircuits();
 		outputState = EditDistanceCommon.execCircuit(sdnalbs, cdnalbs);
 	}
 

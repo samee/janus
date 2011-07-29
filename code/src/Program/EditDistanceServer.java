@@ -42,9 +42,8 @@ public class EditDistanceServer extends ProgServer {
 
 		super.init();
 
-		EditDistanceCommon.initCircuits();
-
 		generateLabelPairsForDNAs();
+
 
 	}
 
@@ -132,6 +131,7 @@ public class EditDistanceServer extends ProgServer {
                   if(cdnalps[i]!=null)
 			cdnalbs[i] = cdnalps[i][0];
 
+		EditDistanceCommon.initCircuits();
 		outputState = EditDistanceCommon.execCircuit(sdnalbs, cdnalbs);
 	}
 

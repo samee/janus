@@ -9,6 +9,7 @@ import ast.AstCharRef;
 import ast.circuit.AstCircuit;
 import ast.circuit.AstDefaultCharTraits;
 import YaoGC.State;
+import Utils.StopWatch;
 
 public class EditDistanceCommon extends ProgCommon {
 	static int sdnaLen;
@@ -24,7 +25,9 @@ public class EditDistanceCommon extends ProgCommon {
 	public static void initCircuits() {
           System.err.println("Server input: "+strSdna);
           System.err.println("Client input: "+strCdna);
+          StopWatch.taskTimeStamp("initCircuits called"); // XXX
           EditDistance ed = new EditDistance(strSdna,strCdna);
+          StopWatch.taskTimeStamp("Partial evaluation done");
           AstCircuit.Generator gen = new AstCircuit.Generator();
           gen.charTraits = new AstDefaultCharTraits(sigma);
           /*
@@ -32,6 +35,7 @@ public class EditDistanceCommon extends ProgCommon {
           System.err.println();
           */
           cir = gen.generate(ed.getRoot());
+          StopWatch.taskTimeStamp("Circuit generated");
 	}
 
         public static int inputBits() { return cir.inputWires.length; }
