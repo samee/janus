@@ -61,7 +61,8 @@ public class AstCharRef {
           if(isSymbolic())
             return System.identityHashCode(c)^(new Integer(this.id).hashCode());
           else
-            return "Concrete".hashCode()^(new Character(ch).hashCode());
+            return "Concrete".hashCode()^
+              (Integer.MAX_VALUE & new Character(ch).hashCode());
         }
 
 

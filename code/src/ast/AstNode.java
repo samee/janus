@@ -26,5 +26,7 @@ public class AstNode {
 	public AstNode[] children() {
 		return data.childNodes();
 	}
-        public int hashCode() { return data.hashCode(); }
+        //public int hashCode() { return data.hashCode(); }
+        // Try not to override .equals() here, coz
+        //   AstVisitedMap depends on it.
 }

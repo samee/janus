@@ -37,16 +37,17 @@ public class AstCircuit extends CompositeCircuit
     this.charTraits = charTraits;
     this.astNodeWidth = astNodeWidth;
     this.props = props;
-    outputComponent = props.circuitIndex.get(root);
+    outputComponent = props.get(root);
 
     try { build(); } catch (Exception e) { e.printStackTrace(); System.exit(1);}
   }
 
   protected void createSubCircuits() throws Exception
   {
-    for(Map.Entry<AstNode,Integer> mentry : props.circuitIndex.entrySet())
+    for(Map.Entry<StableHashNode,Integer> mentry 
+        : props.circuitIndex.entrySet())
     { 
-      AstNode node = mentry.getKey();
+      AstNode node = mentry.getKey().get();
       int i=mentry.getValue(),j;
       Class t = node.getType();
       int bits = astNodeWidth.bitsFor(node);
@@ -79,7 +80,7 @@ public class AstCircuit extends CompositeCircuit
     for(i=0;i<sz;++i) 
       connect(inputWires,extInputIndex+i,subInputWires,subInputIndex+i);
   }
-  private Hashtable<Wire,Wire> sinkToSource = new Hashtable<Wire,Wire>();
+  //private Hashtable<Wire,Wire> sinkToSource = new Hashtable<Wire,Wire>();
   private void connect(Wire[] from,int findex,Wire to[],int tindex)
   {
     /*
@@ -115,8 +116,9 @@ public class AstCircuit extends CompositeCircuit
 
   protected void connectWires() throws Exception
   {
-    for(Map.Entry<AstNode,Integer> mentry : props.circuitIndex.entrySet())
-    { AstNode node = mentry.getKey();
+    for(Map.Entry<StableHashNode,Integer> mentry 
+        : props.circuitIndex.entrySet())
+    { AstNode node = mentry.getKey().get();
       int i = mentry.getValue();
       Class t = node.getType();
       int cc = node.children().length;
@@ -131,12 +133,12 @@ public class AstCircuit extends CompositeCircuit
               props.inputIndex.get(d.getOperandB()));
       }else if(t==AstAddNode.class)
       { // we need to work on subCircuits [i,i+cc-1)
-        Wire[] prev = subCircuits[props.circuitIndex.get(node.children()[0])]
+        Wire[] prev = subCircuits[props.get(node.children()[0])]
           .outputWires;
         for(int j=i+cc-2;j>=i;--j)
         { int wires = subCircuits[j].inputWires.length/2;
-          Wire[] side = subCircuits[props.circuitIndex.get(
-              node.children()[j-i+1])].outputWires;
+          Wire[] side = subCircuits[props.get(node.children()[j-i+1])]
+                            .outputWires;
           for(int k=0;k<wires;++k) // each wire
           { if(k>=prev.length) fixWire(subCircuits[j].inputWires,2*k,0);
             else connect(prev,k,subCircuits[j].inputWires,2*k);
@@ -147,12 +149,12 @@ public class AstCircuit extends CompositeCircuit
         }
       }else if(t==AstMinNode.class)
       { // we need to work on subCircuits [i,i+cc-1)
-        Wire[] prev = subCircuits[props.circuitIndex.get(node.children()[0])]
+        Wire[] prev = subCircuits[props.get(node.children()[0])]
           .outputWires;
         for(int j=i+cc-2;j>=i;--j)
         { int wires = subCircuits[j].inputWires.length/2;
-          Wire[] side = subCircuits[props.circuitIndex.get(
-              node.children()[j-i+1])].outputWires;
+          Wire[] side = subCircuits[props.get(node.children()[j-i+1])]
+            .outputWires;
           for(int k=0;k<wires;++k) // each wire
           { if(k>=prev.length) fixWire(subCircuits[j].inputWires,k,0);
             else connect(prev,k,subCircuits[j].inputWires,k);
@@ -180,8 +182,9 @@ public class AstCircuit extends CompositeCircuit
 
   protected void fixInternalWires()
   { 
-    for(Map.Entry<AstNode,Integer> mentry : props.circuitIndex.entrySet())
-    { AstNode node = mentry.getKey();
+    for(Map.Entry<StableHashNode,Integer> mentry 
+        : props.circuitIndex.entrySet())
+    { AstNode node = mentry.getKey().get();
       int i = mentry.getValue();
       Class t = node.getType();
       if(t==AstValueNode.class) 
@@ -250,7 +253,7 @@ public class AstCircuit extends CompositeCircuit
     // get topologically sorted ordering
     private void explore(AstNode node, AstProperties params)
     {
-      if(params.circuitIndex.containsKey(node)) return;
+      if(params.hasNode(node)) return;
 
       if(node.getType()==AstNequNode.class)
       { AstNequNode d = (AstNequNode)node.getData();
@@ -273,13 +276,29 @@ public class AstCircuit extends CompositeCircuit
     }
   }
 
+  // Stores an AstNode object, but the way it computes its hashCode()
+  //   does not depend on memory reference. Makes sure that client
+  //   and server goes through for-each loops in the same order
+  private static class StableHashNode
+  {
+    private AstNode node;
+    public StableHashNode(AstNode n) { node=n; }
+    public AstNode get() { return node; }
+    public int hashCode() { return node.getData().hashCode(); }
+    public boolean equals(Object o) 
+    { if(o.getClass()!=StableHashNode.class) return false;
+      // using refs here seems safe
+      return node.getData()==((StableHashNode)o).node.getData(); 
+    }
+  }
+
   private static class AstProperties
   {
     public int inputBits, subCircuitCount;
     // Maps from AstNode to the first slot index of subCircuits[]
     //   that corresponds to the node. One node can expand to multiple
     //   subCircuits
-    public Hashtable<AstNode,Integer> circuitIndex;
+    public Hashtable<StableHashNode,Integer> circuitIndex;
     // Maps from AstCharRef to the first slot index of inputWires[]
     //   that corresponds to the input. One input is often represented
     //   by multiple input wires
@@ -288,17 +307,22 @@ public class AstCircuit extends CompositeCircuit
     public AstProperties() 
     {
       inputBits=subCircuitCount=0;
-      circuitIndex = new Hashtable<AstNode,Integer>();
+      circuitIndex = new Hashtable<StableHashNode,Integer>();
       inputIndex = new Hashtable<AstCharRef,Integer>();
     }
 
     void newNode(AstNode node,int subCount)
     {
       assert subCount>0;
-      if(circuitIndex.containsKey(node)) return;
-      circuitIndex.put(node,subCircuitCount);
+      StableHashNode sn = new StableHashNode(node);
+      if(circuitIndex.containsKey(sn)) return;
+      circuitIndex.put(sn,subCircuitCount);
       subCircuitCount+=subCount;
     }
+    int get(AstNode node)
+      { return circuitIndex.get(new StableHashNode(node)); }
+    boolean hasNode(AstNode node)
+      { return circuitIndex.containsKey(new StableHashNode(node)); }
 
     void newInput(AstCharRef chref,int bitCount) 
     { if(inputIndex.containsKey(chref)) return;

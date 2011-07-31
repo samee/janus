@@ -7,6 +7,7 @@ import java.io.*;
 
 abstract public class Circuit implements TransitiveObserver {
 	public static boolean isForGarbling;
+    public static final boolean DEBUG = false;
 
 	public Wire[] inputWires;
 	public Wire[] outputWires;

@@ -24,16 +24,17 @@ class MinMaxRedundancy {
 			return a ^ b;
 		}
 
+        // This must return the same values on client AND server!!
 		public int getHashCode(AstNode node) {
 			if (node.getType() != AstAddNode.class)
-				return super.hashCode();
+				return node.getData().hashCode();
 			AstNode addchild[] = node.children();
 			int rv = (new Integer(addchild.length)).hashCode();
 			for (int i = 0; i < addchild.length - 1; ++i)
-				rv = combine(rv, addchild[i].hashCode());
+				rv = combine(rv, addchild[i].getData().hashCode());
 			AstNode lastchild = addchild[addchild.length - 1];
 			if (lastchild.getType() != AstValueNode.class)
-				rv = combine(rv, lastchild.hashCode());
+				rv = combine(rv, lastchild.getData().hashCode());
 			return rv;
 		}
 

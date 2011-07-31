@@ -60,8 +60,7 @@ public class XOR_2_1 extends SimpleCircuit_2_1 {
 	    }
 	}
 
-        /*
-        if(inWireL.value == Wire.UNKNOWN_SIG && inWireR.value == Wire.UNKNOWN_SIG)
+        if(Circuit.DEBUG && inWireL.value == Wire.UNKNOWN_SIG && inWireR.value == Wire.UNKNOWN_SIG)
         {
           System.out.print("XOR: ");
           if(Circuit.isForGarbling)
@@ -98,7 +97,6 @@ public class XOR_2_1 extends SimpleCircuit_2_1 {
           }
           System.out.println();
         }
-*/
 	outWire.setReady();
     }
 

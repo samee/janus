@@ -75,7 +75,8 @@ public abstract class SimpleCircuit_2_1 extends Circuit {
                                 if(!Circuit.isForGarbling)
                                   System.err.println(outputWires[0].lbl);
                                   */
-                                //debugPrint();
+                                if(Circuit.DEBUG)
+                                  debugPrint();
 			}
 		}
 
