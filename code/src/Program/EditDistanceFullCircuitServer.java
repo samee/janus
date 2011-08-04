@@ -131,6 +131,7 @@ public class EditDistanceServer extends ProgServer {
                   if(cdnalps[i]!=null)
 			cdnalbs[i] = cdnalps[i][0];
 
+		EditDistanceCommon.initCircuits();
 		outputState = EditDistanceCommon.execCircuit(sdnalbs, cdnalbs);
 	}
 

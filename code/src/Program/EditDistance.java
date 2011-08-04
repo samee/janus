@@ -31,13 +31,15 @@ public class EditDistance {
 			next[0] = AstValueNode.create(ai);
 			for (bi = 1; bi <= bn; ++bi) {
 				AstNode cmp = AstNequNode.create(a, ai - 1, b, bi - 1);
-				AstNode add1ops[] = { cur[bi], AstValueNode.create(1) };
-				AstNode add2ops[] = { next[bi - 1], AstValueNode.create(1) };
-				AstNode add3ops[] = { cur[bi - 1], cmp };
+                                AstNode minInnerOps[] = {cur[bi],next[bi-1]};
+                                AstNode add1ops[] = {
+                                  AstMinNode.create(minInnerOps),
+                                  AstValueNode.create(1)
+                                };
+				AstNode add2ops[] = { cur[bi - 1], cmp };
 				AstNode addnode1 = AstAddNode.create(add1ops);
 				AstNode addnode2 = AstAddNode.create(add2ops);
-				AstNode addnode3 = AstAddNode.create(add3ops);
-				AstNode minOps[] = { addnode1, addnode2, addnode3 };
+				AstNode minOps[] = { addnode1, addnode2 };
 				next[bi] = AstMinNode.create(minOps);
 				reducer.reduce(next[bi]);
 				reducer.minCount = reducer.childCount = 0;

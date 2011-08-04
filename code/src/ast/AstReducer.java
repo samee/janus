@@ -145,11 +145,15 @@ public class AstReducer {
         // Methods for post-reduce metadata
         public int nodeValueUpperLim(AstNode node)
         {
+          if(node.getType()==AstValueNode.class)
+            return (((AstValueNode)node.getData()).getValue());
           if(!visited.isVisited(node)) throw new UnknownNodeException();
           return visited.valueAt(node).upperLim;
         }
         public int nodeValueLowerLim(AstNode node)
         {
+          if(node.getType()==AstValueNode.class)
+            return (((AstValueNode)node.getData()).getValue());
           if(!visited.isVisited(node)) throw new UnknownNodeException();
           return visited.valueAt(node).lowerLim;
         }

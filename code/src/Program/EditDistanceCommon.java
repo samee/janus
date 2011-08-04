@@ -6,6 +6,7 @@ import java.math.*;
 import java.util.Map;
 
 import ast.AstCharRef;
+import ast.AstGCExecutor;
 import ast.circuit.AstCircuit;
 import ast.circuit.AstDefaultCharTraits;
 import YaoGC.State;
@@ -16,50 +17,41 @@ public class EditDistanceCommon extends ProgCommon {
 	static int cdnaLen;
 	static String strSdna, strCdna; 
 	public static int sigma;
-        private static AstCircuit cir;
 
 	static int bitLength(int x) {
 		return BigInteger.valueOf(x).bitLength();
 	}
 
 	public static void initCircuits() {
-          System.err.println("Server input: "+strSdna);
-          System.err.println("Client input: "+strCdna);
-          StopWatch.taskTimeStamp("initCircuits called"); // XXX
-          EditDistance ed = new EditDistance(strSdna,strCdna);
-          StopWatch.taskTimeStamp("Partial evaluation done");
-          AstCircuit.Generator gen = new AstCircuit.Generator();
-          gen.charTraits = new AstDefaultCharTraits(sigma);
-          /*
-          ast.AstPrinter.print(ed.getRoot(),System.err);
-          System.err.println();
-          */
-          cir = gen.generate(ed.getRoot());
-          StopWatch.taskTimeStamp("Circuit generated");
 	}
 
-        public static int inputBits() { return cir.inputWires.length; }
 
 	public static State execCircuit(BigInteger[] sdnalbs, BigInteger[] cdnalbs)
 			throws Exception {
 
-          // make State object and call cir.startExecuting(state)
-          BigInteger[] inputLabels = new BigInteger[inputBits()];
-          //   but first, convert string index to circuit input index
-          for(Map.Entry<AstCharRef,Integer> mentry : cir.getInputs().entrySet())
-          {
-            int i = mentry.getValue(),j;
-            AstCharRef chref = mentry.getKey();
-            assert chref.isSymbolic();
-            int stringInd = chref.getId();  // id was the same as index
-            // intentionally comparing reference, not .equals()
-            if(chref.getStringRef()==strSdna)  
-              for(j=0;j<sigma;++j) inputLabels[i+j]=sdnalbs[sigma*stringInd+j];
-            else for(j=0;j<sigma;++j) 
-              inputLabels[i+j]=cdnalbs[sigma*stringInd+j];
-          }
-          for(int i=0;i<inputLabels.length;++i)
-            assert inputLabels[i]!=null:i+"";
-          return cir.startExecuting(State.fromLabels(inputLabels));
+          System.err.println("Server input: "+strSdna);
+          System.err.println("Client input: "+strCdna);
+          final EditDistance ed = new EditDistance(strSdna,strCdna);
+          StopWatch.taskTimeStamp("Expression reductions done");
+          AstGCExecutor.BitSizeCalculator bsc 
+            = new AstGCExecutor.BitSizeCalculator() {
+              public int bitCount(int value) {
+                int rv=0;
+                while(value!=0) { value>>=1; rv++; }
+                return rv==0?1:rv;
+              }
+              public int bitsFor(ast.AstNode node) { 
+                int rv = bitCount(ed.nodeUpperLim(node));
+                ast.AstNode[] child = node.children();
+                for(int i=0;i<child.length;++i) 
+                { int t = bitCount(ed.nodeUpperLim(child[i]));
+                  if(t>rv) rv=t;
+                }
+                return rv;
+              }
+            };
+          // TODO timestamp here
+
+          return AstGCExecutor.execute(sdnalbs,cdnalbs,ed.getRoot(),bsc);
 	}
 }

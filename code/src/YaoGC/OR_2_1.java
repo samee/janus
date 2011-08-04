@@ -61,8 +61,8 @@ public abstract class OR_2_1 extends SimpleCircuit_2_1 {
 	gtt[1 ^ cL][0 ^ cR] = lb[1];
 	gtt[1 ^ cL][1 ^ cR] = lb[1];
 
-        assert Cipher.encrypt(labelL[cL],labelR[cR],k,gtt[0][0])
-          .equals(BigInteger.ZERO);
+	assert Cipher.encrypt(labelL[cL],labelR[cR],k,gtt[0][0])
+	  .equals(BigInteger.ZERO);
     }
 
     protected boolean shortCut() {
