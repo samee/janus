@@ -65,6 +65,7 @@ class TestEDClient {
 	private static void generateData() throws Exception {
 		dna = new BigInteger(EditDistanceCommon.sigma * n, rnd);
 
+                /*
 		BigInteger temp = new BigInteger(n, rnd);
 		secMask = BigInteger.ZERO;
 		BigInteger ones = BigInteger.valueOf((1 << EditDistanceCommon.sigma) - 1);
@@ -73,6 +74,14 @@ class TestEDClient {
 			if (temp.testBit(i))
 				secMask = secMask.or(ones);
 		}
+                */
+                secMask = BigInteger.ZERO;
+                BigInteger ones = BigInteger.valueOf((1 << EditDistanceCommon.sigma) - 1);
+                for (int i = 0; i < n; i++) {
+                  secMask = secMask.shiftLeft(EditDistanceCommon.sigma);
+                  if(rnd.nextFloat()<.2)
+                    secMask = secMask.or(ones);
+                }
 	}
 
 	public static void main(String[] args) throws Exception {

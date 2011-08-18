@@ -2,11 +2,13 @@
 
 package Program;
 
+import java.io.PrintStream;
 import java.math.*;
 import java.util.Map;
 
 import ast.AstCharRef;
 import ast.AstGCExecutor;
+import ast.AstNode;
 import ast.circuit.AstCircuit;
 import ast.circuit.AstDefaultCharTraits;
 import YaoGC.State;
@@ -26,6 +28,23 @@ public class EditDistanceCommon extends ProgCommon {
 	}
 
 
+        private static void compareWithGcc(AstNode root)
+        {
+          try
+          {
+            PrintStream cfile = new PrintStream("cfile.c");
+            cfile.println("// "+ast.AstNodeCounter.count(root));
+            ast.AstCexprPrinter.printFull(root,cfile);
+            cfile.close();
+          }
+          catch(java.io.IOException ex)
+          {
+            ex.printStackTrace();
+            System.exit(1);
+          }
+          StopWatch.taskTimeStamp("Done printing to cfile.c");
+        }
+
 	public static State execCircuit(BigInteger[] sdnalbs, BigInteger[] cdnalbs)
 			throws Exception {
 
@@ -33,6 +52,9 @@ public class EditDistanceCommon extends ProgCommon {
           System.err.println("Client input: "+strCdna);
           final EditDistance ed = new EditDistance(strSdna,strCdna);
           StopWatch.taskTimeStamp("Expression reductions done");
+          // print these only on one side
+          if(YaoGC.Circuit.isForGarbling) compareWithGcc(ed.getRoot());
+
           AstGCExecutor.BitSizeCalculator bsc 
             = new AstGCExecutor.BitSizeCalculator() {
               public int bitCount(int value) {
