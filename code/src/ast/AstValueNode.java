@@ -22,4 +22,9 @@ public class AstValueNode implements AstNodeData {
 		return new AstNode(new AstValueNode(v));
 	}
     public int hashCode() { return new Integer(value).hashCode(); }
+    public boolean equals(Object that)
+    { if(this==that) return true;
+      if(this.getClass()!=that.getClass()) return false;
+      return value == ((AstValueNode)that).value;
+    }
 }

@@ -31,6 +31,12 @@ public class AstNequNode implements AstNodeData {
 		return new AstNode(new AstNequNode(strA, indA, strB, indB));
 	}
 
-        public int hashCode()
-          { return a.chHash()^b.chHash(); }
+	public int hashCode()
+		{ return a.chHash()^b.chHash(); }
+    public boolean equals(Object that)
+    {   if(this==that) return true;
+        if(this.getClass()!=that.getClass()) return false;
+		AstNequNode tthat = (AstNequNode)that;
+		return this.a.equals(tthat.a) && this.b.equals(tthat.b);
+	}
 }

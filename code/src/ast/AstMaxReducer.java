@@ -89,9 +89,10 @@ public class AstMaxReducer {
 					newnode);
 			if (r == MinMaxRedundancy.Result.same
 					|| r == MinMaxRedundancy.Result.small2)
-				return false;
+				return true;
 			else if (r == MinMaxRedundancy.Result.small1) {
 				it.set(null);
+				nodelist.add(newnode);
 				return true;
 			}
 		}
@@ -112,14 +113,14 @@ public class AstMaxReducer {
 		for (i = 0; i < maxchild.length; ++i) {
 			MinMaxRedundancy.HashKey rk = new MinMaxRedundancy.HashKey(
 					maxchild[i]);
-			if (hmap.containsKey(rk))
+			if (hmap.containsKey(rk)) {
 				if (checkRedundantAndAdd(hmap.get(rk), maxchild[i]))
 					nullcount++;
-				else {
-					LinkedList<AstNode> t = new LinkedList<AstNode>();
-					t.add(maxchild[i]);
-					hmap.put(rk, t);
-				}
+			} else {
+				LinkedList<AstNode> t = new LinkedList<AstNode>();
+				t.add(maxchild[i]);
+				hmap.put(rk, t);
+			}
 		}
 		if (maxchild.length == hmap.size())
 			return false;
@@ -128,8 +129,10 @@ public class AstMaxReducer {
 
 		AstNode newmaxchild[] = MinMaxRedundancy.dumpToArray(hmap,
 				maxchild.length - nullcount);
-		node.setData(new AstMaxNode(newmaxchild));
+		if(newmaxchild.length==1) node.setData(newmaxchild[0].getData());
+		else node.setData(new AstMaxNode(newmaxchild));
 
+		if(newmaxchild.length>=2) assert newmaxchild[0]!=newmaxchild[1];
 		return true;
 	}
 

@@ -57,6 +57,7 @@ class MinMaxRedundancy {
 	public static Result checkRedundant(AstNode node1, AstNode node2) {
 		// Ideally, we want a deep-comparison of canonized versions, but
 		// here we do something simpler: shallow-comparison of unsorted versions
+		if(node1==node2) return Result.same;
 		if (node1.getType() != AstAddNode.class
 				|| node2.getType() != AstAddNode.class)
 			return Result.needboth;

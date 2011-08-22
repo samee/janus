@@ -18,13 +18,13 @@ public class AstMinNode implements AstNodeData {
 		return new AstNode(new AstMinNode(children));
 	}
 
-        public int hashCode()
-        {
-          if(hashInCache) return hashcache;
-          int rv="Min".hashCode();
-          for(AstNode child:children)
-            rv^=child.getData().hashCode();
-		  hashInCache=true;
-          return hashcache=rv;
-        }
+    public int hashCode()
+    {
+      if(hashInCache) return hashcache;
+      int rv="Min".hashCode();
+      for(AstNode child:children)
+        rv^=child.getData().hashCode();
+      hashInCache=true;
+      return hashcache=rv;
+    }
 }

@@ -24,7 +24,6 @@ public class AstReducer {
 	public static class ReduceInfo {
 		public int upperLim, lowerLim;
 		public boolean hasConst; // used only for non-leaves
-		public boolean topDownDone = false;
 	}
 
 	private AstVisitedMap<ReduceInfo> visited;
@@ -36,9 +35,8 @@ public class AstReducer {
 	// Do some extra processing not normally done on every node
 	// Does min() --> reduce(add(add(min(),+1),-1))
 	// Helps activate the add(min(add())) rules even when min() is root
-	// Also calls Add-specific top-down reducer
 	public void reduceRoot(AstNode root) {
-		// reduceTopDown(root);
+		//reduceTopDown(root);
 		AstNode addchild1[] = { root, AstValueNode.create(+1) };
 		AstNode add1 = AstAddNode.create(addchild1);
 		AstNode addchild2[] = { add1, AstValueNode.create(-1) };
@@ -49,24 +47,19 @@ public class AstReducer {
 
 	public void reduceTopDown(AstNode node) {
 		Stack<AstNode> stk = new Stack<AstNode>();
+		StructureMap smap = new StructureMap();
 		stk.push(node);
 		int itercount = 0;
-		// System.err.println(visited.size());
 		while (!stk.empty()) {
 			node = stk.pop();
-			// if(!visited.isVisited(node)) visited.visit(node,new
-			// ReduceInfo());
-			if (!visited.isVisited(node))
-				continue;
-			ReduceInfo nodeinfo = visited.valueAt(node);
-			if (nodeinfo.topDownDone)
-				continue;
-			if (node.getType() == AstAddNode.class)
-				addHelper.reduceTopDown(node);
-			nodeinfo.topDownDone = true;
 			AstNode child[] = node.children();
-			for (int i = 0; i < child.length; ++i)
-				stk.push(child[i]);
+			for (int i = 0; i < child.length; ++i) {
+				AstNode p = smap.getDuplicate(child[i]);
+				if(p==child[i]) continue;		// already pushed this in
+				if(p!=null)  					// found a duplicate
+					child[i]=p;					//   hoping it's safe to change
+				else stk.push(child[i]);
+			}
 			itercount++;
 			/*
 			 * if(itercount %1000000==0)
