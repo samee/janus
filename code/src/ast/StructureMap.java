@@ -13,6 +13,7 @@ public class StructureMap
      node that is a duplicate of this is returned */
   public AstNode getDuplicate(AstNode node)
   {
+	assert node!=null;
     NodeBox nb = new NodeBox(node);
     NodeBox prev = nodes.get(nb);
     if(prev==null) nodes.put(nb,nb);

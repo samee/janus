@@ -36,7 +36,7 @@ public class AstReducer {
 	// Does min() --> reduce(add(add(min(),+1),-1))
 	// Helps activate the add(min(add())) rules even when min() is root
 	public void reduceRoot(AstNode root) {
-		//reduceTopDown(root);
+		reduceTopDown(root);
 		AstNode addchild1[] = { root, AstValueNode.create(+1) };
 		AstNode add1 = AstAddNode.create(addchild1);
 		AstNode addchild2[] = { add1, AstValueNode.create(-1) };

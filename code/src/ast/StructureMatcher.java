@@ -19,7 +19,7 @@ public class StructureMatcher
     if(a.getType()!=b.getType()) return false;
     AstNode[] ach = a.children(), bch = b.children();
     if(ach.length!=bch.length) return false;
-    if(ach.length == 0) return a.equals(b);
+    if(ach.length == 0) return a.getData().equals(b.getData());
     for(int i=0;i<ach.length;++i) if(!checkEqual(ach[i],bch[i])) return false;
     return true;
   }
