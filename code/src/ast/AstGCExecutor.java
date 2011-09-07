@@ -1,5 +1,6 @@
 package ast;
 
+import ast.apps.AstSWSimilarityNode;
 import ast.circuit.PartialCircuit;
 import java.math.BigInteger;
 import Program.EditDistance;
@@ -13,13 +14,16 @@ public class AstGCExecutor {
     private ADD_2L_Lplus1[] addCircuit;
     private MIN_2L_L[] minCircuit;
     private MAX_2L_L[] maxCircuit;
+    private SMAX_2L_L[] smaxCircuit;
     private NEQUAL_2L_1[] nequCircuit;
+	private NOT notCircuit;
 
     // Should return the number of bits required to represent 
     //   any given node
     public static interface BitSizeCalculator
     {
         public int bitsFor(AstNode node);
+        public boolean needsNeg(AstNode node);
     }
 
     private BitSizeCalculator bitSize;
@@ -33,7 +37,9 @@ public class AstGCExecutor {
     // e.g. References to garbled circuit objects
     public class NodeData {
         public State state;
+        public boolean isSigned = false;
 
+        // should be renamed to unsignedResize, that doesn't take in extra 's'
         public State resizeState(State s,int width)
         {
             if(s.getWidth()==width) return s; // nop
@@ -41,6 +47,14 @@ public class AstGCExecutor {
               return State.extractState(s,0,width);
             else return State.concatenate(
                     new State(BigInteger.ZERO,width-s.getWidth()),s);
+        }
+        public State signedResize(int width)
+        {
+          if(!isSigned) return resizeState(state,width);
+          if(state.getWidth()==width) return state; // nop
+          else if(state.getWidth()>width)
+            return State.extractState(state,0,width);
+          else return State.signExtend(state,width);
         }
         // There's a reason I hate some of the circuits here! This is it!
         public State riffleStates(State s1,State s2)
@@ -72,12 +86,20 @@ public class AstGCExecutor {
             {  
                 int w = bitSize.bitsFor(current);
                 ADD_2L_Lplus1 cir = addCircuit[w];
-                state = //PartialCircuit.create(cir,
-                        cir.startExecuting(
-                        riffleStates(
-                            resizeState(childLeft.state,w),
-                            resizeState(childRight.state,w)))
-                    ;//.startExecuting();
+                if(bitSize.needsNeg(current)) 
+                { isSigned = true;
+                  state = cir.startExecuting(
+                      riffleStates(
+                          childLeft.signedResize(w),
+                          childRight.signedResize(w)));
+                }
+                else
+                  state = //PartialCircuit.create(cir,
+                          cir.startExecuting(
+                          riffleStates(
+                              resizeState(childLeft.state,w),
+                              resizeState(childRight.state,w)))
+                      ;//.startExecuting();
                 state = State.extractState(state,0,w);
             }
             else if(current.getType()==AstMinNode.class) 
@@ -87,20 +109,31 @@ public class AstGCExecutor {
                 state = //PartialCircuit.create(cir,
                         cir.startExecuting(
                         State.concatenate(
-                            resizeState(childLeft.state,w),
-                            resizeState(childRight.state,w)))
+                          resizeState(childLeft.state,w),
+                          resizeState(childRight.state,w)))
             ;//        .startExecuting();
             }
             else if (current.getType()==AstMaxNode.class) 
             {
                 int w = bitSize.bitsFor(current);
-                MAX_2L_L cir = maxCircuit[w];
-                state = //PartialCircuit.create(cir,
+                // FIXME using one single width for the whole max node
+                if(bitSize.needsNeg(current)) 
+                { SMAX_2L_L cir = smaxCircuit[w];
+                  isSigned = true;
+                  state = cir.startExecuting(
+                      State.concatenate(
+                        childLeft.signedResize(w),
+                        childRight.signedResize(w)));
+                }
+                else
+                { MAX_2L_L cir = maxCircuit[w];
+                  state = //PartialCircuit.create(cir,
                       cir.startExecuting(
                         State.concatenate(
                             resizeState(childLeft.state,w),
                             resizeState(childRight.state,w)))
 ;//                    .startExecuting();
+                }
             }
         }
 
@@ -109,6 +142,8 @@ public class AstGCExecutor {
                 buildValueState(leaf);
             else if(leaf.getType()==AstNequNode.class)
                 executeNEQU(leaf);
+            else if(leaf.getType()==AstSWSimilarityNode.class)
+                executeSW(leaf);
             else
                 assert false : "Unknown type of leaf nodes";
         }
@@ -133,8 +168,36 @@ public class AstGCExecutor {
             }
             else sb = new State(BigInteger.valueOf((int)b.getChar()-'A'),sigma);
 
-            build(cir);
+            //build(cir); ??
             state = cir.startExecuting(State.concatenate(sa,sb));
+            //state = PartialCircuit.create(cir,State.concatenate(sa,sb))
+            //    .startExecuting();
+            // FIXME zero extend the results from this, not sign extend
+        }
+
+        private void executeSW(AstNode node) {
+            AstSWSimilarityNode ann = (AstSWSimilarityNode)(node.getData());
+            int sigma = 2;     // FIXME sigma
+            NEQUAL_2L_1 cir = nequCircuit[sigma];
+            State sa,sb;
+
+            AstCharRef a = ann.getOperandA(), b = ann.getOperandB();
+            if(a.isSymbolic()) 
+            {   int ind = a.getId()*sigma;
+                assert sdnalbs[ind]!=null && sdnalbs[ind+1]!=null;
+                sa = State.fromLabels(sdnalbs,ind,ind+sigma);
+            }
+            else sa = new State(BigInteger.valueOf((int)a.getChar()-'A'),sigma);
+            if(b.isSymbolic()) 
+            {   int ind = b.getId()*sigma;
+                assert cdnalbs[ind]!=null && cdnalbs[ind+1]!=null;
+                sb = State.fromLabels(cdnalbs,ind,ind+sigma);
+            }
+            else sb = new State(BigInteger.valueOf((int)b.getChar()-'A'),sigma);
+
+            //build(cir);
+            state = cir.startExecuting(State.concatenate(sa,sb));
+			state = notCircuit.startExecuting(state);
             //state = PartialCircuit.create(cir,State.concatenate(sa,sb))
             //    .startExecuting();
             // FIXME zero extend the results from this, not sign extend
@@ -144,6 +207,7 @@ public class AstGCExecutor {
             AstValueNode vnode = (AstValueNode)(node.getData());
             state = new State(BigInteger.valueOf(vnode.getValue()),
                     bitSize.bitsFor(node));
+            if(vnode.getValue()<0) isSigned=true;
         }
 
     }
@@ -154,7 +218,8 @@ public class AstGCExecutor {
     {
         //AstPrinter.print(root,System.err); System.err.println();
         AstGCExecutor exec = new AstGCExecutor(sdnalbs,cdnalbs,bsc);
-        return exec.executeSubtree(root).state;
+        State s = exec.executeSubtree(root).state;
+        return s;
         //return exec.executeSubtree(root.children()[0].children()[0].children()[0].children()[2].children()[1]).state;
 //        return exec.executeSubtree(root.children()[0].children()[0].children()[0].children()[2].children()[1]).state;
     }
@@ -168,7 +233,10 @@ public class AstGCExecutor {
       addCircuit = new ADD_2L_Lplus1[MAX_WIDTH];
       minCircuit = new MIN_2L_L[MAX_WIDTH];
       maxCircuit = new MAX_2L_L[MAX_WIDTH];
+      smaxCircuit = new SMAX_2L_L[MAX_WIDTH+1];
       nequCircuit = new NEQUAL_2L_1[MAX_WIDTH];
+	  notCircuit = new NOT();
+	  build(notCircuit);
       for(int i=1;i<MAX_WIDTH;++i)
       { addCircuit[i] = new ADD_2L_Lplus1(i);
         build(addCircuit[i]);
@@ -179,6 +247,8 @@ public class AstGCExecutor {
         if(i>1)
         { nequCircuit[i] = new NEQUAL_2L_1(i);
           build(nequCircuit[i]);
+          smaxCircuit[i] = new SMAX_2L_L(i);
+          build(smaxCircuit[i]);
         }
       }
     }

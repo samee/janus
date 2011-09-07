@@ -48,6 +48,12 @@ public class AstSWSimilarityNode implements AstNodeData {
           return a.chHash()^b.chHash();
         }
 
+    public boolean equals(Object that)
+    {   if(this==that) return true;
+        if(this.getClass()!=that.getClass()) return false;
+		AstSWSimilarityNode tthat = (AstSWSimilarityNode)that;
+		return this.a.equals(tthat.a) && this.b.equals(tthat.b);
+	}
 	// convenience constructor
 	public static AstNode create(String strA, int indA, String strB, int indB) {
 		return new AstNode(new AstSWSimilarityNode(strA, indA, strB, indB));

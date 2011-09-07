@@ -37,6 +37,7 @@ public class AstAddReducer {
 			nodeinfo.upperLim += childinfo.upperLim;
 			nodeinfo.lowerLim += childinfo.lowerLim;
 		}
+		if(AstReducer.REDUCE_DISABLED) return false;
 		if (scount == 0) {
 			node.setData(new AstValueNode(cursum));
 			nodeinfo.upperLim = nodeinfo.lowerLim = cursum;

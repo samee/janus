@@ -46,6 +46,7 @@ public class AstMinReducer {
 			if (nodeinfo.lowerLim > templo)
 				nodeinfo.lowerLim = templo;
 		}
+                if(AstReducer.REDUCE_DISABLED) return false;
 		boolean hasconst = children.length > scount
 				&& curmin < nodeinfo.upperLim;
 		scount = 0;

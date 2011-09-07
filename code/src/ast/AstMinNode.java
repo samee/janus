@@ -21,9 +21,10 @@ public class AstMinNode implements AstNodeData {
     public int hashCode()
     {
       if(hashInCache) return hashcache;
-      int rv="Min".hashCode();
-      for(AstNode child:children)
-        rv^=child.getData().hashCode();
+      int rv=HashUtil.combine("Min".hashCode(),
+          ("Length"+children.length).hashCode());
+      for(int i=0;i<children.length;++i)
+        rv=HashUtil.combine(rv,children[i].getData().hashCode());
       hashInCache=true;
       return hashcache=rv;
     }

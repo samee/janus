@@ -15,6 +15,7 @@ public class StructureMap
   {
 	assert node!=null;
     NodeBox nb = new NodeBox(node);
+    //if(smatcher.equCacheSize()>=1000000) smatcher.resetEquCache();
     NodeBox prev = nodes.get(nb);
     if(prev==null) nodes.put(nb,nb);
     return prev==null?null:prev.node;

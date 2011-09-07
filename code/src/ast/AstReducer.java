@@ -7,6 +7,9 @@ import ast.apps.AstSWSimilarityNode;
 import ast.apps.AstSWSimilarityReducer;
 
 public class AstReducer {
+	// We still need to propagate limits for circuit generator
+	//   even if reductions is disabled (for performance evaluations only)
+	public static final boolean REDUCE_DISABLED = false;
 	AstValueReducer valueHelper = new AstValueReducer();
 	AstMinReducer minHelper = new AstMinReducer(this);
 	AstMaxReducer maxHelper = new AstMaxReducer(this);
@@ -36,6 +39,7 @@ public class AstReducer {
 	// Does min() --> reduce(add(add(min(),+1),-1))
 	// Helps activate the add(min(add())) rules even when min() is root
 	public void reduceRoot(AstNode root) {
+		if(REDUCE_DISABLED) return;
 		reduceTopDown(root);
 		AstNode addchild1[] = { root, AstValueNode.create(+1) };
 		AstNode add1 = AstAddNode.create(addchild1);
@@ -61,10 +65,8 @@ public class AstReducer {
 				else stk.push(child[i]);
 			}
 			itercount++;
-			/*
-			 * if(itercount %1000000==0)
-			 * System.err.println(itercount+" "+visited.size());
-			 */
+			if(itercount %50000==0)
+				System.err.println(itercount+" "+visited.size());
 		}
 		// System.err.println(node.getType());
 	}
@@ -132,7 +134,7 @@ public class AstReducer {
 
         public static class UnknownNodeException extends RuntimeException
         {
-          UnknownNodeException() { super(); }
+          UnknownNodeException(String s) { super(s); }
         }
 
         // Methods for post-reduce metadata
@@ -140,14 +142,19 @@ public class AstReducer {
         {
           if(node.getType()==AstValueNode.class)
             return (((AstValueNode)node.getData()).getValue());
-          if(!visited.isVisited(node)) throw new UnknownNodeException();
+          if(!visited.isVisited(node)) 
+		  {	 AstPrinter.print(node,System.err);
+			  System.err.println();
+			  throw new UnknownNodeException(""+node.getType());
+		  }
           return visited.valueAt(node).upperLim;
         }
         public int nodeValueLowerLim(AstNode node)
         {
           if(node.getType()==AstValueNode.class)
             return (((AstValueNode)node.getData()).getValue());
-          if(!visited.isVisited(node)) throw new UnknownNodeException();
+          if(!visited.isVisited(node)) 
+			  throw new UnknownNodeException(""+node.getType());
           return visited.valueAt(node).lowerLim;
         }
 }

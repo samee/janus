@@ -18,12 +18,14 @@ public class AstAddNode implements AstNodeData {
 		return new AstNode(new AstAddNode(children));
 	}
 
+    private static int rotate(int x) { return (x<<1)+(x<0?1:0); }
     public int hashCode()
     {
       if(hashInCache) return hashcache;
-      int rv="Add".hashCode();
-      for(AstNode child:children)
-        rv^=child.getData().hashCode();
+      int rv=HashUtil.combine("Add".hashCode(),
+          ("Length"+children.length).hashCode());
+      for(int i=0;i<children.length;++i)
+        rv=HashUtil.combine(rv,children[i].getData().hashCode());
 	  hashInCache = true;
       return hashcache=rv;
     }

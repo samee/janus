@@ -18,13 +18,14 @@ public class AstMaxNode implements AstNodeData {
 		return new AstNode(new AstMaxNode(children));
 	}
 
-        public int hashCode()
-        {
-          if(hashInCache) return hashcache;
-          int rv="Max".hashCode();
-          for(AstNode child:children)
-            rv^=child.getData().hashCode();
-		  hashInCache = true;
-          return hashcache=rv;
-        }
+    public int hashCode()
+    {
+      if(hashInCache) return hashcache;
+      int rv=HashUtil.combine("Max".hashCode(),
+          ("Length"+children.length).hashCode());
+      for(int i=0;i<children.length;++i)
+        rv=HashUtil.combine(rv,children[i].getData().hashCode());
+      hashInCache = true;
+      return hashcache=rv;
+    }
 }

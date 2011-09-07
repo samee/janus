@@ -1,4 +1,4 @@
-package test;
+package Program;
 
 import java.util.Scanner;
 
@@ -14,6 +14,7 @@ public class SmithWaterman {
 	private String a, b;
 	private int insDelCost[];
 	private AstNode root;
+	private AstReducer reducer = new AstReducer();
 
 	public SmithWaterman(String a, String b, int insDelCost[]) {
 		assert a.length() <= insDelCost.length
@@ -23,7 +24,6 @@ public class SmithWaterman {
 		this.insDelCost = insDelCost;
 
 		AstNode mat[][] = new AstNode[a.length() + 1][b.length() + 1];
-		AstReducer reducer = new AstReducer();
 
 		mat[0][0] = AstValueNode.create(0);
 		for (int i = 0; i < a.length(); ++i)
@@ -32,6 +32,7 @@ public class SmithWaterman {
 			mat[0][j + 1] = AstValueNode.create(0);
 		for (int i = 0; i < a.length(); ++i)
 			for (int j = 0; j < b.length(); ++j) {
+                          if(j==0 && i%10==0) System.err.println("Starting "+i);
 				AstNode maxparam[] = new AstNode[i + j + 4];
 				AstNode addparam[];
 
@@ -60,6 +61,7 @@ public class SmithWaterman {
 				reducer.reduce(mat[i + 1][j + 1]);
 			}
 		root = mat[a.length()][b.length()];
+		reducer.reduceRoot(root);
 	}
 
 	public AstNode getRoot() {
@@ -73,6 +75,11 @@ public class SmithWaterman {
 	public String getInputB() {
 		return b;
 	}
+
+	public int nodeUpperLim(AstNode node) 
+		{ return reducer.nodeValueUpperLim(node); }
+	public int nodeLowerLim(AstNode node) 
+		{ return reducer.nodeValueLowerLim(node); }
 
 	public static void main(String args[]) {
 		Scanner scanner = new Scanner(System.in);
