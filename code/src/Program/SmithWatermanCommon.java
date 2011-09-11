@@ -61,6 +61,7 @@ public class SmithWatermanCommon extends ProgCommon {
           ast.AstPrinter.print(sw.getRoot(),System.err);
           System.err.println();
           */
+          test.SplitOpsTest.test(sw.getRoot());
           // print these only on one side
           //if(YaoGC.Circuit.isForGarbling) compareWithGcc(sw.getRoot());
 

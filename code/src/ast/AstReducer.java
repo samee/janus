@@ -134,7 +134,8 @@ public class AstReducer {
 
         public static class UnknownNodeException extends RuntimeException
         {
-          UnknownNodeException(String s) { super(s); }
+          public UnknownNodeException(String s) { super(s); }
+          public UnknownNodeException(AstNode n) { super(""+n.getType()); }
         }
 
         // Methods for post-reduce metadata
@@ -145,7 +146,7 @@ public class AstReducer {
           if(!visited.isVisited(node)) 
 		  {	 AstPrinter.print(node,System.err);
 			  System.err.println();
-			  throw new UnknownNodeException(""+node.getType());
+			  throw new UnknownNodeException(node);
 		  }
           return visited.valueAt(node).upperLim;
         }
@@ -154,7 +155,7 @@ public class AstReducer {
           if(node.getType()==AstValueNode.class)
             return (((AstValueNode)node.getData()).getValue());
           if(!visited.isVisited(node)) 
-			  throw new UnknownNodeException(""+node.getType());
+			  throw new UnknownNodeException(node);
           return visited.valueAt(node).lowerLim;
         }
 }
