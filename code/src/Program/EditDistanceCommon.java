@@ -53,8 +53,10 @@ public class EditDistanceCommon extends ProgCommon {
           final EditDistance ed = new EditDistance(strSdna,strCdna);
           StopWatch.taskTimeStamp("Expression reductions done");
           test.SplitOpsTest.test(ed.getRoot());
+          /*
           ast.AstPrinter.print(ed.getRoot(),System.err);
           System.err.println();
+          */
           // print these only on one side
           //if(YaoGC.Circuit.isForGarbling) compareWithGcc(ed.getRoot());
 
