@@ -27,4 +27,7 @@ public class AstValueNode implements AstNodeData {
       if(this.getClass()!=that.getClass()) return false;
       return value == ((AstValueNode)that).value;
     }
+
+	public boolean dependsOnA() { return false; }	// overrides
+	public boolean dependsOnB() { return false; }	//
 }

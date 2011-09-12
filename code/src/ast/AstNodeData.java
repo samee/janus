@@ -7,4 +7,6 @@ package ast;
  */
 public interface AstNodeData {
 	public AstNode[] childNodes();
+	public boolean dependsOnA();
+	public boolean dependsOnB();
 }

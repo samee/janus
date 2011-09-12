@@ -4,6 +4,8 @@ package Program;
 
 import java.math.*;
 
+import ast.AstGCExecutor;
+import ast.AstNode;
 import YaoGC.*;
 import Utils.*;
 
@@ -13,8 +15,29 @@ public class EditDistanceClient extends ProgClient {
 	private BigInteger csecmask;
 	private int sSecBitLen, cSecBitLen;
 	private BigInteger[] sdnalbs, cdnalbs;
+	private BigInteger extrabits;   // locally computed bits
 
 	private State outputState;
+
+        private AstGCExecutor.LeafEval leafEval = new AstGCExecutor.LeafEval(){
+          public boolean serverSide() { return false; }
+          public int eval(AstNode node)
+          {
+            if(node.getType()==ast.AstValueNode.class)
+              return ((ast.AstValueNode)node.getData()).getValue();
+            if(node.getType()==ast.AstNequNode.class)
+            { ast.AstNequNode data = (ast.AstNequNode)node.getData();
+              assert !data.getOperandA().isSymbolic();
+              assert data.getOperandB().isSymbolic();
+              char a = data.getOperandA().getChar();
+              char b = EditDistanceCommon.strCdna.charAt(
+                  data.getOperandB().getId());
+              return a==b?0:1;
+            }
+            assert false;
+            return 0;
+          }
+        };
 
 	public EditDistanceClient(BigInteger dna, BigInteger secMask, int length) {
 		cdna = dna;
@@ -38,7 +61,8 @@ public class EditDistanceClient extends ProgClient {
 		EditDistanceCommon.strSdna = (String) EditDistanceCommon.ois.readObject();
 		ssecmask= (BigInteger) EditDistanceCommon.ois.readObject();
 
-		otNumOfPairs = cSecBitLen;
+		extrabits = EditDistanceCommon.initAstExpr(leafEval);
+		otNumOfPairs = cSecBitLen+EditDistanceCommon.clientExtraInputs;
 
 
 		super.init();
@@ -46,11 +70,14 @@ public class EditDistanceClient extends ProgClient {
 
 	protected void execTransfer() throws Exception {
 		int bytelength = (Wire.labelBitLength - 1) / 8 + 1;
+		int sBaseLen = EditDistanceCommon.sigma 
+			* EditDistanceCommon.sdnaLen;
+		int cBaseLen = EditDistanceCommon.sigma 
+			* EditDistanceCommon.cdnaLen;
 
-		sdnalbs = new BigInteger[EditDistanceCommon.sigma
-				* EditDistanceCommon.sdnaLen];
+		sdnalbs = new BigInteger[sBaseLen+EditDistanceCommon.serverExtraInputs];
 		for (int i = 0; i < sdnalbs.length; i++) {
-			if (ssecmask.testBit(i))
+			if (i>=sBaseLen || ssecmask.testBit(i))
 				sdnalbs[i] = Utils.readBigInteger(bytelength,
 						EditDistanceCommon.ois);
 			else
@@ -58,20 +85,31 @@ public class EditDistanceClient extends ProgClient {
 		}
 		StopWatch.taskTimeStamp("receiving labels for peer's inputs");
 
-		cdnalbs = new BigInteger[EditDistanceCommon.sigma
-				* EditDistanceCommon.cdnaLen];
+		cdnalbs = new BigInteger[cBaseLen+EditDistanceCommon.clientExtraInputs];
 		BigInteger tmpchoice = BigInteger.ZERO;
-		for (int i = 0, j = 0; i < cdnalbs.length; i++)
-			if (csecmask.testBit(i)) {
+		int otcount = 0;
+		for (int i = 0; i < cdnalbs.length; i++) {
+			if (i<cBaseLen && csecmask.testBit(i)) {
 				if (cdna.testBit(i))
-					tmpchoice = tmpchoice.setBit(j);
-				j++;
+					tmpchoice = tmpchoice.setBit(otcount);
+				otcount++;
+			}else if(i>=cBaseLen)
+			{	if(extrabits.testBit(i-cBaseLen))
+					tmpchoice = tmpchoice.setBit(otcount);
+				otcount++;
 			}
+		}
 
+		System.err.println("Lengths = "+sdnalbs.length+" "+cdnalbs.length+
+				" "+otcount);
+		System.err.println("Extras = "+EditDistanceCommon.serverExtraInputs
+				+" "+EditDistanceCommon.clientExtraInputs);
+		System.err.println("BaseLens = "+sBaseLen+" "+cBaseLen);
 		rcver.execProtocol(tmpchoice);
 		BigInteger[] temp = rcver.getData();
+		System.err.println("RecvLen = "+temp.length);
 		for (int i = 0, j = 0; i < cdnalbs.length; i++)
-			if (csecmask.testBit(i))
+			if (i>=cBaseLen || csecmask.testBit(i))
 				cdnalbs[i] = temp[j++];
 
                 /*
@@ -92,7 +130,6 @@ public class EditDistanceClient extends ProgClient {
 	}
 
 	protected void execCircuit() throws Exception {
-		EditDistanceCommon.initCircuits();
 		outputState = EditDistanceCommon.execCircuit(sdnalbs, cdnalbs);
 	}
 

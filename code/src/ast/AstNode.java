@@ -2,6 +2,8 @@ package ast;
 
 // Container to actual node
 public class AstNode {
+	// disabled only for measuring benchmarking benefits
+	public static final boolean LOCAL_EVAL_ENABLED = true;
 	private AstNodeData data;
 
 	public AstNode() {
@@ -26,6 +28,16 @@ public class AstNode {
 	public AstNode[] children() {
 		return data.childNodes();
 	}
+
+
+	// Returns true iff current node value depends on private data
+	//   supplied by party A (or B, in case of dependsOnB)
+	//   Both become true if it depends on both parties inputs, in which
+	//   case garbled circuits will be used
+	public boolean dependsOnA() { return data.dependsOnA(); }
+	public boolean dependsOnB() { return data.dependsOnB(); }
+	public boolean needsGarbled() { return dependsOnA() && dependsOnB(); }
+
         /*
            This is really screwed up. I can't really override hashCode or equals
            here, since AstVisitedMap needs it (it's a simple wrapper over

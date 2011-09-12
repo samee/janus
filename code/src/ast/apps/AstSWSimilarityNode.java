@@ -58,4 +58,7 @@ public class AstSWSimilarityNode implements AstNodeData {
 	public static AstNode create(String strA, int indA, String strB, int indB) {
 		return new AstNode(new AstSWSimilarityNode(strA, indA, strB, indB));
 	}
+
+	public boolean dependsOnA() { return a.isSymbolic(); }
+	public boolean dependsOnB() { return b.isSymbolic(); }
 }

@@ -3,6 +3,7 @@ package ast;
 import ast.apps.AstSWSimilarityNode;
 import ast.circuit.PartialCircuit;
 import java.math.BigInteger;
+import java.util.BitSet;
 import Program.EditDistance;
 import YaoGC.*;
 
@@ -10,13 +11,20 @@ public class AstGCExecutor {
 
     private BigInteger[] sdnalbs, cdnalbs;
     private AstVisitedMap<NodeData[]> visited;
+    private AstVisitedMap<Integer> labelIndex;
+	private AstVisitedMap<Integer> localValue;
+	private BitSet bitsBeingAdded = null;
+	private int clientExtraLabels = 0, serverExtraLabels = 0;
+	private int bitsAdded = 0;
+	private boolean alreadyExecuted = false;
     private static final int MAX_WIDTH = 40;
     private ADD_2L_Lplus1[] addCircuit;
     private MIN_2L_L[] minCircuit;
     private MAX_2L_L[] maxCircuit;
     private SMAX_2L_L[] smaxCircuit;
     private NEQUAL_2L_1[] nequCircuit;
-	private NOT notCircuit;
+    private NOT notCircuit;
+	private static final int sigma = 2;     // FIXME sigma
 
     // Should return the number of bits required to represent 
     //   any given node
@@ -25,6 +33,12 @@ public class AstGCExecutor {
         public int bitsFor(AstNode node);
         public boolean needsNeg(AstNode node);
     }
+
+	public static interface LeafEval
+	{
+		public boolean serverSide();
+		public int eval(AstNode leafNode);
+	}
 
     private BitSizeCalculator bitSize;
 
@@ -150,22 +164,13 @@ public class AstGCExecutor {
 
         private void executeNEQU(AstNode node) {
             AstNequNode ann = (AstNequNode)(node.getData());
-            int sigma = 2;     // FIXME sigma
             NEQUAL_2L_1 cir = nequCircuit[sigma];
             State sa,sb;
 
             AstCharRef a = ann.getOperandA(), b = ann.getOperandB();
-            if(a.isSymbolic()) 
-            {   int ind = a.getId()*sigma;
-                assert sdnalbs[ind]!=null && sdnalbs[ind+1]!=null;
-                sa = State.fromLabels(sdnalbs,ind,ind+sigma);
-            }
+            if(a.isSymbolic()) sa = labels2State(a,true);
             else sa = new State(BigInteger.valueOf((int)a.getChar()-'A'),sigma);
-            if(b.isSymbolic()) 
-            {   int ind = b.getId()*sigma;
-                assert cdnalbs[ind]!=null && cdnalbs[ind+1]!=null;
-                sb = State.fromLabels(cdnalbs,ind,ind+sigma);
-            }
+            if(b.isSymbolic()) sb = labels2State(b,false);
             else sb = new State(BigInteger.valueOf((int)b.getChar()-'A'),sigma);
 
             //build(cir); ??
@@ -177,22 +182,13 @@ public class AstGCExecutor {
 
         private void executeSW(AstNode node) {
             AstSWSimilarityNode ann = (AstSWSimilarityNode)(node.getData());
-            int sigma = 2;     // FIXME sigma
             NEQUAL_2L_1 cir = nequCircuit[sigma];
             State sa,sb;
 
             AstCharRef a = ann.getOperandA(), b = ann.getOperandB();
-            if(a.isSymbolic()) 
-            {   int ind = a.getId()*sigma;
-                assert sdnalbs[ind]!=null && sdnalbs[ind+1]!=null;
-                sa = State.fromLabels(sdnalbs,ind,ind+sigma);
-            }
+            if(a.isSymbolic()) sa = labels2State(a,true);
             else sa = new State(BigInteger.valueOf((int)a.getChar()-'A'),sigma);
-            if(b.isSymbolic()) 
-            {   int ind = b.getId()*sigma;
-                assert cdnalbs[ind]!=null && cdnalbs[ind+1]!=null;
-                sb = State.fromLabels(cdnalbs,ind,ind+sigma);
-            }
+            if(b.isSymbolic()) sb = labels2State(b,false);
             else sb = new State(BigInteger.valueOf((int)b.getChar()-'A'),sigma);
 
             //build(cir);
@@ -212,22 +208,160 @@ public class AstGCExecutor {
 
     }
 
-    /** The only public method in this class :) . */
     public static State execute(BigInteger[] sdnalbs, 
             BigInteger[] cdnalbs, AstNode root,BitSizeCalculator bsc) 
     {
         //AstPrinter.print(root,System.err); System.err.println();
-        AstGCExecutor exec = new AstGCExecutor(sdnalbs,cdnalbs,bsc);
-        State s = exec.executeSubtree(root).state;
-        return s;
+        AstGCExecutor exec = new AstGCExecutor(bsc);
+        return exec.execute(root,sdnalbs,cdnalbs);
         //return exec.executeSubtree(root.children()[0].children()[0].children()[0].children()[2].children()[1]).state;
 //        return exec.executeSubtree(root.children()[0].children()[0].children()[0].children()[2].children()[1]).state;
     }
 
-    private AstGCExecutor(BigInteger[] sdnalbs,BigInteger[] cdnalbs,
-            BitSizeCalculator bitSize)
-    { this.sdnalbs = sdnalbs;
-      this.cdnalbs = cdnalbs;
+    public State execute(AstNode root, 
+        BigInteger[] sdnalbs, BigInteger[] cdnalbs) 
+    { 
+		assert sdnalbs.length>=serverExtraLabels;
+		assert cdnalbs.length>=clientExtraLabels;
+		assert !alreadyExecuted;
+		this.sdnalbs = sdnalbs;
+		this.cdnalbs = cdnalbs;
+		alreadyExecuted = true;
+		return executeSubtree(root).state; 
+    }
+
+    public BigInteger localEval(AstNode root, LeafEval leafEval)
+    {
+		if(!AstNode.LOCAL_EVAL_ENABLED) return BigInteger.ZERO;
+		// enable local eval mods if needed
+		if(labelIndex==null)
+		{
+			labelIndex = new AstVisitedMap<Integer>();
+			localValue = new AstVisitedMap<Integer>();
+			serverExtraLabels = clientExtraLabels = 0;
+		}
+		// explore tree for index and sizes
+		bitsBeingAdded = new BitSet();
+		bitsAdded=0;
+		localEvalRecur(root,leafEval,true);
+		BitSet bs = bitsBeingAdded;
+		bitsBeingAdded=null;
+		return bitSet2BigInteger(bs);
+    }
+	public int getBitsAdded() { return bitsAdded; }
+	private static BigInteger bitSet2BigInteger(BitSet bs)
+	{
+		byte[] res = new byte[bs.length()/8+1];
+		for(int i=0;i<bs.length();++i)
+			if(bs.get(i)) res[res.length-1-i/8]|=(1<<(i%8));
+		return new BigInteger(res);
+	}
+
+	private void reserveGarbledLabels(AstNode node)
+	{
+		assert !node.needsGarbled();
+		if(node.dependsOnA())
+		{	int w=bitSize.bitsFor(node);
+			labelIndex.visit(node,serverExtraLabels);
+			serverExtraLabels+=w;
+		}else if(node.dependsOnB())
+		{	int w=bitSize.bitsFor(node);
+			labelIndex.visit(node,clientExtraLabels);
+			clientExtraLabels+=w;
+		}
+	}
+	private int localEvalRecur(AstNode node, LeafEval leafEval, 
+			boolean localRoot)
+	{
+		// silent fix if value doesn't make sense
+		if(node.needsGarbled()) localRoot=false;
+		if(labelIndex.isVisited(node))
+		{
+			if((node.dependsOnA() ^ node.dependsOnB()) &&
+					localRoot && labelIndex.valueAt(node)==null)
+				// no labels were reserved the last time I visited
+				reserveGarbledLabels(node);
+			if(hasLocalValue(node,leafEval)) return localValue.valueAt(node);
+			else return 0;	// something garbage that should not be used by
+							//   caller
+		}
+		// reserve garbled label slots if needed
+		if(node.needsGarbled()) labelIndex.visit(node,null);
+		else if(!localRoot)     labelIndex.visit(node,null);
+		else if(node.dependsOnA() || node.dependsOnB())
+			reserveGarbledLabels(node);
+
+		int nodevalue = 0;
+		AstNode[] child = node.children();
+		if(child.length==0 && hasLocalValue(node,leafEval)) 
+			nodevalue=leafEval.eval(node);
+		for(int i=0;i<child.length;++i)
+		{	int res=localEvalRecur(child[i],leafEval,node.needsGarbled());
+			if(i==0) nodevalue=res;
+			else if(node.getType()==AstAddNode.class) nodevalue+=res;
+			else if(node.getType()==AstMinNode.class) 
+				nodevalue=Math.min(nodevalue,res);
+			else if(node.getType()==AstMaxNode.class)
+				nodevalue=Math.max(nodevalue,res);
+			else throw new AstReducer.UnknownNodeException(child[i]);
+		}
+		if(hasLocalValue(node,leafEval)) 
+		{	int w = bitSize.bitsFor(node);
+			for(int i=0;i<w;++i)
+				bitsBeingAdded.set(bitsAdded+i,(nodevalue&(i<<1))!=0);
+			bitsAdded+=w;
+			localValue.visit(node,nodevalue);
+		}
+		return nodevalue;
+	}
+	private boolean hasLocalValue(AstNode node, LeafEval leafEval)
+	{
+		if(node.needsGarbled()) return false;
+		if(node.dependsOnA()) return leafEval.serverSide();
+		if(node.dependsOnB()) return !leafEval.serverSide();
+		return true;
+	}
+
+    public int localServerBitCount() { return serverExtraLabels; }
+    public int localClientBitCount() { return clientExtraLabels; }
+
+	/*
+	   Returns a State object if they can be composed from
+	   the BigInteger label arrays (sdnalbs or cdnalbs). Otherwise returns null.
+	   Right now, it returns non-null only if it represents value that has
+	   been locally evaluated by one of the parties
+	*/
+	private State labels2State(AstNode node)
+	{
+		if(labelIndex==null) return null;	// check if local eval enabled
+		// null if nobody can locally evaluate it
+		if(node.needsGarbled()) return null;
+		if(!labelIndex.isVisited(node)) return null;
+		int ind=labelIndex.valueAt(node);
+		int w=bitSize.bitsFor(node);
+		if(node.dependsOnA()) 
+		{	ind+=sdnalbs.length-serverExtraLabels;
+			return State.fromLabels(sdnalbs,ind,ind+w);
+		}
+		if(node.dependsOnB()) 
+		{	ind+=cdnalbs.length-clientExtraLabels;
+			return State.fromLabels(cdnalbs,ind,ind+w);
+		}
+		return null;
+	}
+	/*
+	   Returns a State object if they can be composed from
+	   the BigInteger label arrays (sdnalbs or cdnalbs). Otherwise returns null.
+	   Returns non-null if chRef.isSymbolic() is true
+	*/
+	private State labels2State(AstCharRef chRef, boolean server)
+	{ 	if(!chRef.isSymbolic()) return null;
+		return State.fromLabels(server?sdnalbs:cdnalbs,
+				chRef.getId()*sigma,chRef.getId()*sigma+sigma);
+	}
+
+    public AstGCExecutor(BitSizeCalculator bitSize)
+    {
       this.bitSize = bitSize;
       this.visited = new AstVisitedMap<NodeData[]>();
       addCircuit = new ADD_2L_Lplus1[MAX_WIDTH];
@@ -259,6 +393,15 @@ public class AstGCExecutor {
         // previously computed object
         if (visited.isVisited(node))
             return visited.valueAt(node)[0];
+
+		State temp = labels2State(node);
+		if(temp!=null)
+		{	// we do not need to go further
+			NodeData rv = new NodeData();
+			rv.state = temp;
+			rv.isSigned = bitSize.needsNeg(node);
+			return rv;
+		}
 
         AstNode[] children = node.children();
         NodeData data[];

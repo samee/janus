@@ -4,9 +4,14 @@ public class AstAddNode implements AstNodeData {
 	private AstNode[] children;
     private int hashcache = -1;
 	private boolean hashInCache = false;
+	private boolean depA=false, depB=false;
 
 	public AstAddNode(AstNode[] children) {
 		this.children = children;
+		for(int i=0;i<children.length;++i)
+		{	if(children[i].dependsOnA()) depA=true;
+			if(children[i].dependsOnB()) depB=true;
+		}
 	}
 
 	public AstNode[] childNodes() {
@@ -29,4 +34,7 @@ public class AstAddNode implements AstNodeData {
 	  hashInCache = true;
       return hashcache=rv;
     }
+
+	public boolean dependsOnA() { return depA; }
+	public boolean dependsOnB() { return depB; }
 }

@@ -39,4 +39,7 @@ public class AstNequNode implements AstNodeData {
 		AstNequNode tthat = (AstNequNode)that;
 		return this.a.equals(tthat.a) && this.b.equals(tthat.b);
 	}
+
+	public boolean dependsOnA() { return a.isSymbolic(); }
+	public boolean dependsOnB() { return b.isSymbolic(); }
 }
