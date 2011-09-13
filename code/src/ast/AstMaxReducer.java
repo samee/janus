@@ -40,6 +40,10 @@ public class AstMaxReducer {
 				nodeinfo.upperLim = temphi;
 			if (nodeinfo.lowerLim < templo)
 				nodeinfo.lowerLim = templo;
+                        if(childinfo.canAbsorbPlusA) 
+                          nodeinfo.canAbsorbPlusA = true;
+                        if(childinfo.canAbsorbPlusB) 
+                          nodeinfo.canAbsorbPlusB = true;
 		}
 		if(AstReducer.REDUCE_DISABLED) return false;
 		boolean hasconst = children.length > scount
@@ -74,6 +78,10 @@ public class AstMaxReducer {
 		nodeinfo.hasConst = hasconst;
 		node.setData(new AstMaxNode(newchildren));
 		repeat = exRemoveRedundantMaxChildren(node, nodeinfo) || repeat;
+		if(AstReducer.LOCALITY_ENABLED)
+		{	repeat = AstReducer.absorbConstsLocally(node) || repeat;
+			repeat = AstReducer.groupLocalChildren(node) || repeat;
+		}
 		repeat = factorConstAdd(node) || repeat;
 		return repeat;
 	}

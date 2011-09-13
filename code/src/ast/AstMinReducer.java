@@ -38,13 +38,17 @@ public class AstMinReducer {
 			}
 
 			reducerMain.childCount++;
-			AstReducer.ReduceInfo childInfo = reducerMain.reduce(children[i]);
-			int temphi = childInfo.upperLim;
-			int templo = childInfo.lowerLim;
+			AstReducer.ReduceInfo childinfo = reducerMain.reduce(children[i]);
+			int temphi = childinfo.upperLim;
+			int templo = childinfo.lowerLim;
 			if (nodeinfo.upperLim > temphi)
 				nodeinfo.upperLim = temphi;
 			if (nodeinfo.lowerLim > templo)
 				nodeinfo.lowerLim = templo;
+                        if(childinfo.canAbsorbPlusA) 
+                          nodeinfo.canAbsorbPlusA = true;
+                        if(childinfo.canAbsorbPlusB) 
+                          nodeinfo.canAbsorbPlusB = true;
 		}
                 if(AstReducer.REDUCE_DISABLED) return false;
 		boolean hasconst = children.length > scount
@@ -80,6 +84,10 @@ public class AstMinReducer {
 		nodeinfo.hasConst = hasconst;
 		node.setData(new AstMinNode(newchildren));
 		repeat = exRemoveRedundantMinChildren(node, nodeinfo);
+		if(AstReducer.LOCALITY_ENABLED)
+		{	repeat = AstReducer.absorbConstsLocally(node) || repeat;
+			repeat = AstReducer.groupLocalChildren(node) || repeat;
+		}
 		repeat = factorConstAdd(node) || repeat;
 		return repeat;
 	}

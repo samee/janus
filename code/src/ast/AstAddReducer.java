@@ -20,8 +20,10 @@ public class AstAddReducer {
 				new AstNode[0]);
 		AstNode lastSym = null;
 		for (int i = 0; i < children.length; ++i) {
+			assert node!=children[i]:"Why am I my own child?";
 			reducerMain.reduce(children[i]);
-			if (node.getType() == children[i].getType())
+			if (node.getType() == children[i].getType() 
+					&& children[i].needsGarbled())
 				repeat = true;
 		}
 		if (repeat)
@@ -36,6 +38,10 @@ public class AstAddReducer {
 
 			nodeinfo.upperLim += childinfo.upperLim;
 			nodeinfo.lowerLim += childinfo.lowerLim;
+                        if(childinfo.canAbsorbPlusA) 
+                          nodeinfo.canAbsorbPlusA = true;
+                        if(childinfo.canAbsorbPlusB) 
+                          nodeinfo.canAbsorbPlusB = true;
 		}
 		if(AstReducer.REDUCE_DISABLED) return false;
 		if (scount == 0) {
@@ -59,6 +65,10 @@ public class AstAddReducer {
 			newchildren[scount] = AstValueNode.create(cursum);
 		nodeinfo.hasConst = hasconst;
 		node.setData(new AstAddNode(newchildren));
+		if(AstReducer.LOCALITY_ENABLED)
+		{	repeat = AstReducer.absorbConstsLocally(node) || repeat;
+			repeat = AstReducer.groupLocalChildren(node) || repeat;
+		}
 		// Just swapping these two will worsen optimizations
 		repeat = factorAddThroughMin(node, nodeinfo) || repeat;
 		// repeat = distributeConstAddThroughMin(node) || repeat;
@@ -138,6 +148,7 @@ public class AstAddReducer {
 			AstReducer.ReduceInfo nodeinfo) {
 		if (node.getType() != AstAddNode.class)
 			return false;
+		if(!node.needsGarbled()) return false;
 
 		boolean sthFactored = false;
 		AstNode addchild[] = node.children();
@@ -174,10 +185,13 @@ public class AstAddReducer {
 	// caller may assume that addnode is not modified in any way
 	private AstNode[] factorAddsOut(AstNode[] addnode,
 			ArrayList<AstNode> outnodes) {
-		int i, j;
+		int i, j, ng=0;
 		for (i = 0; i < addnode.length; ++i)
-			if (addnode[i].getType() != AstAddNode.class)
+		{	if (addnode[i].getType() != AstAddNode.class)
 				return null;
+			if(addnode[i].needsGarbled()) ng++;
+		}
+		if(ng<=1) return null;
 		outnodes.clear();
 		// eventually assigned to outnodes through AstAddNode.create
 		ArrayList<ArrayList<AstNode>> rest = new ArrayList<ArrayList<AstNode>>();

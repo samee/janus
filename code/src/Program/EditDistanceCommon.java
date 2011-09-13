@@ -26,7 +26,7 @@ public class EditDistanceCommon extends ProgCommon {
           = new AstGCExecutor.BitSizeCalculator() {
             public int bitCount(int value) {
               int rv=0;
-              assert value>=0;
+              assert value>=0: value;
               while(value!=0) { value>>=1; rv++; }
               return rv==0?1:rv;
             }
@@ -39,7 +39,8 @@ public class EditDistanceCommon extends ProgCommon {
               boolean oneMore = needsNeg(node);
               ast.AstNode[] child = node.children();
               for(int i=0;i<child.length;++i) 
-              { int t = bitCount(editDistanceAst.nodeUpperLim(child[i]));
+			  {
+                int t = bitCount(editDistanceAst.nodeUpperLim(child[i]));
                 if(t>rv) rv=t;
                 oneMore = oneMore || needsNeg(child[i]);
               }
@@ -89,10 +90,10 @@ public class EditDistanceCommon extends ProgCommon {
 
           EditDistance ed = editDistanceAst;
           test.SplitOpsTest.test(ed.getRoot());
-          /*
+		  /*
           ast.AstPrinter.print(ed.getRoot(),System.err);
           System.err.println();
-          */
+		  */
           // print these only on one side
           //if(YaoGC.Circuit.isForGarbling) compareWithGcc(ed.getRoot());
 
