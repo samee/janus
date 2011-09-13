@@ -18,10 +18,6 @@ public class AstSWSimilarityReducer {
 			nodeinfo.upperLim = AstSWSimilarityNode.MAX;
 			nodeinfo.lowerLim = AstSWSimilarityNode.MIN;
 		}
-                if(!node.needsGarbled())
-                { if(!node.dependsOnB()) nodeinfo.canAbsorbPlusA=true;
-                  if(!node.dependsOnA()) nodeinfo.canAbsorbPlusB=true;
-                }
 		return false;
 	}
 }

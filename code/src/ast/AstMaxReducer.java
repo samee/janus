@@ -40,10 +40,6 @@ public class AstMaxReducer {
 				nodeinfo.upperLim = temphi;
 			if (nodeinfo.lowerLim < templo)
 				nodeinfo.lowerLim = templo;
-                        if(childinfo.canAbsorbPlusA) 
-                          nodeinfo.canAbsorbPlusA = true;
-                        if(childinfo.canAbsorbPlusB) 
-                          nodeinfo.canAbsorbPlusB = true;
 		}
 		if(AstReducer.REDUCE_DISABLED) return false;
 		boolean hasconst = children.length > scount

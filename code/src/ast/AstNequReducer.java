@@ -13,10 +13,6 @@ public class AstNequReducer {
 			nodeinfo.upperLim = 1;
 			nodeinfo.lowerLim = 0;
 		}
-                if(!node.needsGarbled())
-                { if(!node.dependsOnB()) nodeinfo.canAbsorbPlusA=true;
-                  if(!node.dependsOnA()) nodeinfo.canAbsorbPlusB=true;
-                }
 		return false;
 	}
 }

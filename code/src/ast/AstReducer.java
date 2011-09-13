@@ -10,7 +10,8 @@ public class AstReducer {
 	// We still need to propagate limits for circuit generator
 	//   even if reductions is disabled (for performance evaluations only)
 	public static final boolean REDUCE_DISABLED = false;
-	public static final boolean LOCALITY_ENABLED = true;
+	public static final boolean LOCALITY_ENABLED = true
+      && AstNode.LOCAL_EVAL_ENABLED;
 	AstValueReducer valueHelper = new AstValueReducer();
 	AstMinReducer minHelper = new AstMinReducer(this);
 	AstMaxReducer maxHelper = new AstMaxReducer(this);
@@ -30,12 +31,6 @@ public class AstReducer {
 	public static class ReduceInfo {
 		public int upperLim, lowerLim;
 		public boolean hasConst; // used only for non-leaves
-                // These two are used for distributing adds to offload
-                //   more to local computation. For example,
-                //   add(min(x,b0),b1) --> min(add(x,b1),add(b0,b1)) doesn't
-                //   help, but doesn't hurt either, since add(b0,b1) is local
-                //   gets better if x = add(a,b2). Then it can remove an add.
-                public boolean canAbsorbPlusA, canAbsorbPlusB;
 	}
 
 	private AstVisitedMap<ReduceInfo> visited;
@@ -49,8 +44,12 @@ public class AstReducer {
 	// Helps activate the add(min(add())) rules even when min() is root
 	public void reduceRoot(AstNode root) {
 		if(REDUCE_DISABLED) return;
+		AstLocalAbsorb absorber = new AstLocalAbsorb(root);
+		System.err.println("Absorbs: "+absorber.statA+" "+absorber.statB
+				+" "+AstNodeCounter.count(root));
+
 		reduceTopDown(root);
-		if(root.needsGarbled())
+		if(root.needsGarbled()||!LOCALITY_ENABLED)
 		{	AstNode addchild1[] = { root, AstValueNode.create(+1) };
 			AstNode add1 = AstAddNode.create(addchild1);
 			AstNode addchild2[] = { add1, AstValueNode.create(-1) };
@@ -137,7 +136,7 @@ public class AstReducer {
 			System.err.println("Flattening to breadth " + flatsize(root));
 		for (int i = 0; i < mychildren.length; ++i)
 			if (mychildren[i].getType() == root.getType() && 
-					mychildren[i].needsGarbled())
+                    (!LOCALITY_ENABLED||mychildren[i].needsGarbled()))
 				rv.addAll(flattenedChildList(mychildren[i]));
 			else
 				rv.add(mychildren[i]);
