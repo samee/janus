@@ -45,21 +45,20 @@ public class AstReducer {
 	public void reduceRoot(AstNode root) {
 		if(REDUCE_DISABLED) return;
 		AstLocalAbsorb absorber = new AstLocalAbsorb(root);
-		System.err.println("Absorbs: "+absorber.statA+" "+absorber.statB
-				+" "+AstNodeCounter.count(root));
-
-		reduceTopDown(root);
 		if(root.needsGarbled()||!LOCALITY_ENABLED)
 		{	AstNode addchild1[] = { root, AstValueNode.create(+1) };
 			AstNode add1 = AstAddNode.create(addchild1);
 			AstNode addchild2[] = { add1, AstValueNode.create(-1) };
 			AstNode add2 = AstAddNode.create(addchild2);
-			reduce(add2);
+			if(!REDUCE_DISABLED) reduce(add2);	// if not really needed
 			root.setData(add2.getData());
 		}
+		removeDuplicates(root);
+		System.err.println("Absorbs: "+absorber.statA+" "+absorber.statB
+				+" "+AstNodeCounter.count(root));
 	}
 
-	public void reduceTopDown(AstNode node) {
+	private void removeDuplicates(AstNode node) {
 		Stack<AstNode> stk = new Stack<AstNode>();
 		StructureMap smap = new StructureMap();
 		stk.push(node);

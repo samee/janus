@@ -35,6 +35,7 @@ public class AstLocalAbsorb {
 	{
 		AbsorbStat info = visitInfo.valueAt(node);
 		if(info.absorbMarked) return info;
+		info.absorbMarked=true;
 		if(!node.needsGarbled())
 		{	if(!node.dependsOnB()) info.absorbsA=true;
 			if(!node.dependsOnA()) info.absorbsB=true;

@@ -41,7 +41,7 @@ public class EditDistance {
 				AstNode addnode2 = AstAddNode.create(add2ops);
 				AstNode minOps[] = { addnode1, addnode2 };
 				next[bi] = AstMinNode.create(minOps);
-				reducer.reduce(next[bi]);
+				//reducer.reduce(next[bi]);
 				reducer.minCount = reducer.childCount = 0;
 			}
 			AstNode[] t = cur;

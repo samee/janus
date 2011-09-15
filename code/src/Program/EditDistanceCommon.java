@@ -89,7 +89,8 @@ public class EditDistanceCommon extends ProgCommon {
 			throws Exception {
 
           EditDistance ed = editDistanceAst;
-          test.SplitOpsTest.test(ed.getRoot());
+          if(!ast.AstReducer.REDUCE_DISABLED) 	// why do I need this?
+			  test.SplitOpsTest.test(ed.getRoot());
 		  /*
           ast.AstPrinter.print(ed.getRoot(),System.err);
           System.err.println();
