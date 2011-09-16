@@ -80,6 +80,7 @@ public class SmithWaterman {
 		{ return reducer.nodeValueUpperLim(node); }
 	public int nodeLowerLim(AstNode node) 
 		{ return reducer.nodeValueLowerLim(node); }
+	public void reduce(AstNode node) { reducer.reduce(node); }
 
 	public static void main(String args[]) {
 		Scanner scanner = new Scanner(System.in);

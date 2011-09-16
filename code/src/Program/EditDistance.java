@@ -49,6 +49,7 @@ public class EditDistance {
 			next = t;
 		}
 		root = cur[bn];
+		reducer.reduce(root);
 		reducer.reduceRoot(root);
 		// reducer.printStats(System.err);
 	}
@@ -69,6 +70,7 @@ public class EditDistance {
           { return reducer.nodeValueUpperLim(node); }
         public int nodeLowerLim(AstNode node) 
           { return reducer.nodeValueLowerLim(node); }
+		public void reduce(AstNode node) { reducer.reduce(node); }
 
 	// test harness
 	public static void main(String args[]) {

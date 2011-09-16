@@ -61,7 +61,6 @@ public class SmithWatermanCommon extends ProgCommon {
           ast.AstPrinter.print(sw.getRoot(),System.err);
           System.err.println();
           */
-          test.SplitOpsTest.test(sw.getRoot());
           // print these only on one side
           //if(YaoGC.Circuit.isForGarbling) compareWithGcc(sw.getRoot());
 
@@ -93,6 +92,8 @@ public class SmithWatermanCommon extends ProgCommon {
               public int abs(int x) { return x<0?-x:x; }
 
               public int bitsFor(ast.AstNode node) { 
+				//ast.AstReducer.REDUCE_DISABLED = true;		// HACK
+				//sw.reduce(node);
                 int rv = bitsForOneNode(node);
                 boolean oneMore = nodeNeedsNeg(node);
                 ast.AstNode[] child = node.children();
@@ -106,6 +107,7 @@ public class SmithWatermanCommon extends ProgCommon {
             };
           // TODO timestamp here
 
+//          test.SplitOpsTest.test(sw.getRoot(),bsc);
 //          return AstGCExecutor.execute(sdnalbs,cdnalbs,sw.getRoot(),bsc);
           return AstGCExecutor.execute(sdnalbs,cdnalbs,sw.getRoot(),bsc);
 	}

@@ -65,16 +65,19 @@ public abstract class OR_2_1 extends SimpleCircuit_2_1 {
 	  .equals(BigInteger.ZERO);
     }
 
-    protected boolean shortCut() {
+	protected boolean shortCut() {
+		Circuit.collapseShortcutCount++;
 	if (inputWires[0].value == 1) {
 	    inputWires[0].value = Wire.UNKNOWN_SIG;
 	    outputWires[0].value = 1;
+		Circuit.collapseShortcutCount++;
 	    return true;
 	}
 	
 	if (inputWires[1].value == 1) {
 	    inputWires[1].value = Wire.UNKNOWN_SIG;
 	    outputWires[0].value = 1;
+		Circuit.collapseShortcutCount++;
 	    return true;
 	}
 
@@ -96,6 +99,7 @@ public abstract class OR_2_1 extends SimpleCircuit_2_1 {
     		outWire.value = 1;
     	    }
 
+			Circuit.collapseShortcutCount++;
     	    return true;
     	}
 

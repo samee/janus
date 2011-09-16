@@ -71,7 +71,7 @@ class TestEDServer {
                 BigInteger ones = BigInteger.valueOf((1 << EditDistanceCommon.sigma) - 1);
                 for (int i = 0; i < n; i++) {
                   secMask = secMask.shiftLeft(EditDistanceCommon.sigma);
-                  if(rnd.nextFloat()<.08)
+                  if(rnd.nextFloat()<.1)
                     secMask = secMask.or(ones);
                 }
 		// dna = EditDistanceServer.getDNAString(r, n);

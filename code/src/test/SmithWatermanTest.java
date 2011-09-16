@@ -4,6 +4,7 @@ import java.io.PrintStream;
 
 import test.StringTestGenerator.Eraser;
 import test.StringTestGenerator.helper;
+import Program.SmithWaterman;
 
 import ast.AstNodeCounter;
 

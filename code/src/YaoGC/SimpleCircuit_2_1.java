@@ -91,6 +91,7 @@ public abstract class SimpleCircuit_2_1 extends Circuit {
 	protected abstract boolean collapse();
 
 	protected void sendGTT() {
+		Circuit.nonFreeGateCount++;
 		try {
 			int bytelength = (Wire.labelBitLength - 1) / 8 + 1;
 			Utils.writeBigInteger(gtt[0][1], bytelength, oos);

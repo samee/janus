@@ -221,13 +221,18 @@ public class AstGCExecutor {
     public State execute(AstNode root, 
         BigInteger[] sdnalbs, BigInteger[] cdnalbs) 
     { 
+		Circuit.resetStats();
 		assert sdnalbs.length>=serverExtraLabels;
 		assert cdnalbs.length>=clientExtraLabels;
 		assert !alreadyExecuted;
 		this.sdnalbs = sdnalbs;
 		this.cdnalbs = cdnalbs;
 		alreadyExecuted = true;
-		return executeSubtree(root).state; 
+		State rv=executeSubtree(root).state; 
+		System.err.println("Non-free gates used: "+Circuit.nonFreeGateCount);
+		System.err.println("Non-free gates bypassed by collapse/shortCut: "+
+				Circuit.collapseShortcutCount);
+		return rv;
     }
 
     public BigInteger localEval(AstNode root, LeafEval leafEval)

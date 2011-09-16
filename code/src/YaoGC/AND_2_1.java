@@ -65,11 +65,13 @@ public abstract class AND_2_1 extends SimpleCircuit_2_1 {
     protected boolean shortCut() {
 	if (inputWires[0].value == 0) {
 	    outputWires[0].value = 0;
+		Circuit.collapseShortcutCount++;
 	    return true;
 	}
 	
 	if (inputWires[1].value == 0) {
 	    outputWires[0].value = 0;
+		Circuit.collapseShortcutCount++;
 	    return true;
 	}
 
@@ -91,6 +93,7 @@ public abstract class AND_2_1 extends SimpleCircuit_2_1 {
     		outWire.value = 0;
     	    }
 
+			Circuit.collapseShortcutCount++;
     	    return true;
     	}
 

@@ -5,13 +5,14 @@ import ast.apps.*;
 
 public class SplitOpsTest
 {
-  public static void test(AstNode root)
+  AstGCExecutor.BitSizeCalculator bsc;
+  public static void test(AstNode root, AstGCExecutor.BitSizeCalculator bsc)
   {
-    SubtreeOpCount soc = new SplitOpsTest(true).exploreSubtree(root);
-    SubtreeOpCount soc2 = new SplitOpsTest(false).exploreSubtree(root);
-    System.err.println(soc2.oc.ab+" from "+
-        "dumb: "+soc.oc.ab+"+"+soc.oc.a+"+"+soc.oc.b+" plain: "+
-        ast.AstNodeCounter.count(root));
+//    SubtreeOpCount soc = new SplitOpsTest(true).exploreSubtree(root);
+	SplitOpsTest tester = new SplitOpsTest(false);
+	tester.bsc = bsc;
+    SubtreeOpCount soc2 = tester.exploreSubtree(root);
+    System.err.println("Assoc result: "+soc2.oc.ab+" "+soc2.oc.gatecount);
   }
   AstVisitedMap<OpStat> opStat = new AstVisitedMap<OpStat>();
   AstVisitedMap<GroupChildren> groupChildren 
@@ -22,7 +23,8 @@ public class SplitOpsTest
   // number of operations of each type, never memoized
   private static class OpCount 
   { int a,b,ab;    // default init to 0
-    void add(OpCount oc) { a+=oc.a; b+=oc.b; ab+=oc.ab; }
+    int gatecount;
+    void add(OpCount oc) { a+=oc.a; b+=oc.b; ab+=oc.ab;gatecount+=oc.gatecount;}
   }
 
   // number of children in a group
@@ -164,7 +166,10 @@ public class SplitOpsTest
       else extra++;
     }
     if(res.gc.childAB!=0 || (res.gc.childA!=0 && res.gc.childB!=0))
-    { rv.oc.ab+=extra+res.gc.childAB-1;
+    { int newops = extra+res.gc.childAB-1;
+	  int scale = (node.getType()!=AstAddNode.class?2:1);
+	  rv.oc.ab+=newops;
+	  if(bsc!=null) rv.oc.gatecount+=newops*bsc.bitsFor(node)*scale;
       rv.os.a=rv.os.b=true;  // our output is a secure output
       return;
     }
@@ -201,6 +206,8 @@ public class SplitOpsTest
     }
     if(false && rv.gc.allSecret())  // collapse, no point going beyond this again
     { rv.oc.ab+=rv.gc.childAB-1;
+	  int scale = (node.getType()==AstAddNode.class?1:2);
+	  if(bsc!=null) rv.oc.gatecount+=(rv.gc.childAB-1)*bsc.bitsFor(node)*scale;
       rv.gc.childAB=0;     // [opaqueLine]
     }
     groupChildren.visit(node,rv.gc);

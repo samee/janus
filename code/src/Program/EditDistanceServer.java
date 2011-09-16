@@ -267,5 +267,6 @@ public class EditDistanceServer extends ProgServer {
 
 		System.out.println("output (verify): "
 				+ D[EditDistanceCommon.sdnaLen][EditDistanceCommon.cdnaLen]);
+		StopWatch.taskTimeStamp("verified ");
 	}
 }

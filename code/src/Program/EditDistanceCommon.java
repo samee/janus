@@ -35,6 +35,8 @@ public class EditDistanceCommon extends ProgCommon {
             public int abs(int x) { return x<0?-x:x; }
 
             public int bitsFor(ast.AstNode node) { 
+			  //ast.AstReducer.REDUCE_DISABLED=true;	// HACK
+			  //editDistanceAst.reduce(node);		//
               int rv = bitCount(editDistanceAst.nodeUpperLim(node));
               boolean oneMore = needsNeg(node);
               ast.AstNode[] child = node.children();
@@ -74,6 +76,8 @@ public class EditDistanceCommon extends ProgCommon {
           System.err.println("Server input: "+strSdna);
           System.err.println("Client input: "+strCdna);
           editDistanceAst = new EditDistance(strSdna,strCdna);
+          if(!ast.AstReducer.REDUCE_DISABLED) 	// why do I need this?
+			  test.SplitOpsTest.test(editDistanceAst.getRoot(),bscalc);
           executor = new AstGCExecutor(bscalc);
           BigInteger rv = BigInteger.ZERO;
           if(AstNode.LOCAL_EVAL_ENABLED)
@@ -89,8 +93,6 @@ public class EditDistanceCommon extends ProgCommon {
 			throws Exception {
 
           EditDistance ed = editDistanceAst;
-          if(!ast.AstReducer.REDUCE_DISABLED) 	// why do I need this?
-			  test.SplitOpsTest.test(ed.getRoot());
 		  /*
           ast.AstPrinter.print(ed.getRoot(),System.err);
           System.err.println();
