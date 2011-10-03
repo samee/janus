@@ -38,7 +38,7 @@ class TestEDServer {
                 CmdLineParser.Option optionSeed 
                   = parser.addLongOption('q',"seed");
                 CmdLineParser.Option optionSecretProb
-                  = parser.addLongOption('p',"probability");
+                  = parser.addDoubleOption('p',"probability");
 
 		try {
 			parser.parse(args);

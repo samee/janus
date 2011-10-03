@@ -10,6 +10,7 @@ import ast.AstNode;
 import ast.AstValueNode;
 import ast.AstVisitedMap;
 import ast.apps.AstSWSimilarityNode;
+import Program.SmithWaterman;
 
 public class SmithWatermanVerify {
 	// Compare evaluated graph's value with manually calculated SmithWaterman

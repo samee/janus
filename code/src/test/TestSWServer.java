@@ -38,7 +38,7 @@ class TestSWServer {
                 CmdLineParser.Option optionSeed 
                   = parser.addLongOption('q',"seed");
                 CmdLineParser.Option optionSecretProb
-                  = parser.addLongOption('p',"probability");
+                  = parser.addDoubleOption('p',"probability");
 
 		try {
 			parser.parse(args);
@@ -48,6 +48,7 @@ class TestSWServer {
 			System.exit(2);
 		}
 
+                prob = (Double) parser.getOptionValue(optionSecretProb,0.5);
 		autogen = (Boolean) parser.getOptionValue(optionAuto, false);
 		n = ((Integer) parser.getOptionValue(optionDNALength, new Integer(100)))
 				.intValue();

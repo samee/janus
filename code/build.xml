@@ -1,0 +1,96 @@
+<project default="compile">
+  <path id="classpath">
+    <fileset dir="extlibs" includes="**/*.jar"/>
+  </path>
+  <property name="StringAlgo.len" value="50"/>
+  <property name="StringAlgo.secretProb" value="0.5"/>
+  <property name="StringAlgo.bitsPerChar" value="2"/>
+  <property name="StringAlgo.extraParams" value=""/>
+  <property name="StringAlgo.iterCount" value="1"/>
+
+
+  <target name="clean">
+    <delete dir="bin"/>
+  </target>
+  <target name="compile">
+    <mkdir dir="bin"/>
+    <javac srcdir="src" destdir="bin" classpathref="classpath" includeantruntime="false"/>
+  </target>
+
+
+  <target name="runedserver" depends="compile">
+    <java classname="test.TestEDServer" fork="true">
+      <classpath>
+        <path refid="classpath"/>
+        <path location="bin"/>
+      </classpath>
+      <jvmarg value="-ea"/>
+      <arg value="-a"/>
+      <arg value="-n"/>
+      <arg value="${StringAlgo.len}"/>
+      <arg value="-g"/>
+      <arg value="${StringAlgo.bitsPerChar}"/>
+      <arg value="-p"/>
+      <arg value="${StringAlgo.secretProb}"/>
+      <arg line="${StringAlgo.extraParams}"/>
+    </java>
+  </target>
+
+  <target name="runedclient" depends="compile">
+    <java classname="test.TestEDClient" fork="true">
+      <classpath>
+        <path refid="classpath"/>
+        <path location="bin"/>
+      </classpath>
+      <jvmarg value="-ea"/>
+      <arg value="-a"/>
+      <arg value="-n"/>
+      <arg value="${StringAlgo.len}"/>
+      <arg value="-g"/>
+      <arg value="${StringAlgo.bitsPerChar}"/>
+      <arg value="-p"/>
+      <arg value="${StringAlgo.secretProb}"/>
+      <arg value="-r"/>
+      <arg value="${StringAlgo.iterCount}"/>
+      <arg line="${StringAlgo.extraParams}"/>
+    </java>
+  </target>
+
+  <target name="runswserver" depends="compile">
+    <java classname="test.TestSWServer" fork="true">
+      <classpath>
+        <path refid="classpath"/>
+        <path location="bin"/>
+      </classpath>
+      <jvmarg value="-ea"/>
+      <arg value="-a"/>
+      <arg value="-n"/>
+      <arg value="${StringAlgo.len}"/>
+      <arg value="-g"/>
+      <arg value="${StringAlgo.bitsPerChar}"/>
+      <arg value="-p"/>
+      <arg value="${StringAlgo.secretProb}"/>
+      <arg line="${StringAlgo.extraParams}"/>
+    </java>
+  </target>
+
+  <target name="runswclient" depends="compile">
+    <java classname="test.TestSWClient" fork="true">
+      <classpath>
+        <path refid="classpath"/>
+        <path location="bin"/>
+      </classpath>
+      <jvmarg value="-ea"/>
+      <arg value="-a"/>
+      <arg value="-n"/>
+      <arg value="${StringAlgo.len}"/>
+      <arg value="-g"/>
+      <arg value="${StringAlgo.bitsPerChar}"/>
+      <arg value="-p"/>
+      <arg value="${StringAlgo.secretProb}"/>
+      <arg value="-r"/>
+      <arg value="${StringAlgo.iterCount}"/>
+      <arg line="${StringAlgo.extraParams}"/>
+    </java>
+  </target>
+</project>
