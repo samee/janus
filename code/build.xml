@@ -1,7 +1,11 @@
-<project default="compile">
+<project default="jar">
   <path id="classpath">
     <fileset dir="extlibs" includes="**/*.jar"/>
   </path>
+  <property name="build.dir" value="build"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <property name="jar.dir" value="${build.dir}/jar"/>
+  <property name="jar.file" value="${jar.dir}/framework-optimizer.jar"/>
   <property name="StringAlgo.len" value="50"/>
   <property name="StringAlgo.secretProb" value="0.5"/>
   <property name="StringAlgo.bitsPerChar" value="2"/>
@@ -10,11 +14,15 @@
 
 
   <target name="clean">
-    <delete dir="bin"/>
+    <delete dir="${build.dir}"/>
   </target>
   <target name="compile">
-    <mkdir dir="bin"/>
-    <javac srcdir="src" destdir="bin" classpathref="classpath" includeantruntime="false"/>
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="src" destdir="${classes.dir}" classpathref="classpath" includeantruntime="false"/>
+  </target>
+  <target name="jar" depends="compile">
+    <mkdir dir="${jar.dir}"/>
+    <jar destfile="${jar.file}" basedir="${classes.dir}"/>
   </target>
 
 
@@ -22,7 +30,7 @@
     <java classname="test.TestEDServer" fork="true">
       <classpath>
         <path refid="classpath"/>
-        <path location="bin"/>
+        <path location="${jar.file}"/>
       </classpath>
       <jvmarg value="-ea"/>
       <arg value="-a"/>
@@ -40,7 +48,7 @@
     <java classname="test.TestEDClient" fork="true">
       <classpath>
         <path refid="classpath"/>
-        <path location="bin"/>
+        <path location="${jar.file}"/>
       </classpath>
       <jvmarg value="-ea"/>
       <arg value="-a"/>
@@ -60,7 +68,7 @@
     <java classname="test.TestSWServer" fork="true">
       <classpath>
         <path refid="classpath"/>
-        <path location="bin"/>
+        <path location="${jar.file}"/>
       </classpath>
       <jvmarg value="-ea"/>
       <arg value="-a"/>
@@ -78,7 +86,7 @@
     <java classname="test.TestSWClient" fork="true">
       <classpath>
         <path refid="classpath"/>
-        <path location="bin"/>
+        <path location="${jar.file}"/>
       </classpath>
       <jvmarg value="-ea"/>
       <arg value="-a"/>
