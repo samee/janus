@@ -3,7 +3,7 @@ package ast;
 // Container to actual node
 public class AstNode {
 	// disabled only for measuring benchmarking benefits
-	public static final boolean LOCAL_EVAL_ENABLED = true;
+	public static final boolean LOCAL_EVAL_ENABLED = false;
 	private AstNodeData data;
 
 	public AstNode() {

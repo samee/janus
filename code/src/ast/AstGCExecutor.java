@@ -99,6 +99,7 @@ public class AstGCExecutor {
             if (current.getType()==AstAddNode.class)
             {  
                 int w = bitSize.bitsFor(current);
+                gateused+=w;
                 ADD_2L_Lplus1 cir = addCircuit[w];
                 if(bitSize.needsNeg(current)) 
                 { isSigned = true;
@@ -119,6 +120,7 @@ public class AstGCExecutor {
             else if(current.getType()==AstMinNode.class) 
             {
                 int w = bitSize.bitsFor(current);
+                gateused+=w*2;
                 MIN_2L_L cir = minCircuit[w];
                 state = //PartialCircuit.create(cir,
                         cir.startExecuting(
@@ -130,6 +132,7 @@ public class AstGCExecutor {
             else if (current.getType()==AstMaxNode.class) 
             {
                 int w = bitSize.bitsFor(current);
+                gateused+=w*2;
                 // FIXME using one single width for the whole max node
                 if(bitSize.needsNeg(current)) 
                 { SMAX_2L_L cir = smaxCircuit[w];
@@ -218,10 +221,12 @@ public class AstGCExecutor {
 //        return exec.executeSubtree(root.children()[0].children()[0].children()[0].children()[2].children()[1]).state;
     }
 
+    public static int gateused;
     public State execute(AstNode root, 
         BigInteger[] sdnalbs, BigInteger[] cdnalbs) 
     { 
 		Circuit.resetStats();
+                gateused=0;
 		assert sdnalbs.length>=serverExtraLabels;
 		assert cdnalbs.length>=clientExtraLabels;
 		assert !alreadyExecuted;
@@ -232,6 +237,7 @@ public class AstGCExecutor {
 		System.err.println("Non-free gates used: "+Circuit.nonFreeGateCount);
 		System.err.println("Non-free gates bypassed by collapse/shortCut: "+
 				Circuit.collapseShortcutCount);
+                System.err.println("Non-free gates in circuit: "+gateused);
 		return rv;
     }
 

@@ -12,6 +12,7 @@ public abstract class OR_2_1 extends SimpleCircuit_2_1 {
     }
 
     public static OR_2_1 newInstance() {
+      Circuit.nonfreeBuilt++;
 	if (Circuit.isForGarbling)
 	    return new G_OR_2_1();
 	else

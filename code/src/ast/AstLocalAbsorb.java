@@ -14,19 +14,61 @@ public class AstLocalAbsorb {
 		public boolean absorbMarked = false;
 		public boolean shared = false;
 		public boolean transformVisit = false;
+                public boolean saveopsdone = false;
 	}
 	private AstReducer reducerMain;
 	private AstVisitedMap<AbsorbStat> visitInfo;
 	public int statA,statB;
+        public int garbledTotal, savedTotal;
 
 	public AstLocalAbsorb(AstNode root,AstReducer reducerMain)
 	{
 		visitInfo = new AstVisitedMap<AbsorbStat>();
 		statA=statB=0;
+                garbledTotal=0;
+                this.reducerMain=reducerMain;
 		initShared(root);
 		initAbsorbStat(root);
+                marksavedops(root);
 //		transform(root);
 	}
+        private void marksavedops(AstNode node)
+        {
+          AbsorbStat as = visitInfo.valueAt(node);
+          if(as.saveopsdone) return;
+          as.saveopsdone=true;
+          if(!node.needsGarbled()) return;
+          AstNode[] child=node.children();
+          if(child.length==0) return;
+          int garbled=0;
+          boolean ao=false, bo=false, co=false;
+          boolean absorbsA = false, absorbsB = false;
+          int scale = (node.getType()==AstAddNode.class?1:2);
+
+          for(int i=0;i<child.length;++i)
+          {
+            marksavedops(child[i]);
+            if(child[i].needsGarbled()) 
+            { ++garbled;
+              if(visitInfo.valueAt(child[i]).absorbsA) absorbsA=true;
+              if(visitInfo.valueAt(child[i]).absorbsB) absorbsB=true;
+            }
+            else if(child[i].dependsOnA()) ao=true;
+            else if(child[i].dependsOnB()) bo=true;
+            else co=true;
+          }
+          //int opcount = child.length-1;
+          int opcount = garbled - 1;
+          if(garbled == 0 && ao && bo) opcount=1;
+          else if(garbled == 0) opcount = 0;
+          else
+          { if(ao && !absorbsA) opcount++;
+            if(bo && !absorbsB) opcount++;
+            if(!ao && !bo && co && !absorbsA && !absorbsB) opcount++;
+          }
+
+          garbledTotal+=bscalc.bitsFor(node)*scale*opcount;
+        }
 	private void initShared(AstNode node)
 	{
 		if(visitInfo.isVisited(node))
@@ -51,7 +93,7 @@ public class AstLocalAbsorb {
 		if(!node.needsGarbled())
 		{	if(!node.dependsOnB()) info.absorbsA=true;
 			if(!node.dependsOnA()) info.absorbsB=true;
-			updateStats(info);
+			updateStats(info,node);
 			return info;
 		}
 		AstNode[] child=node.children();
@@ -69,10 +111,78 @@ public class AstLocalAbsorb {
 		{	if(ac==child.length) info.absorbsA=true;
 			if(bc==child.length) info.absorbsB=true;
 		}
-		updateStats(info);
+		updateStats(info,node);
 		return info;
 	}
-	private void updateStats(AbsorbStat info)
+        AstGCExecutor.BitSizeCalculator bscalc
+          = new AstGCExecutor.BitSizeCalculator() {
+            public int bitCount(int value) {
+              int rv=0;
+              assert value>=0;
+              while(value!=0) { value>>=1; rv++; }
+              return rv==0?1:rv;
+            }
+            // without sign bit provision
+            public int bitsForOneNode(AstNode node) {
+              int u = bitCount(abs(reducerMain.nodeValueUpperLim(node)));
+              int l = bitCount(abs(reducerMain.nodeValueLowerLim(node)));
+              int rv = u>l?u:l;
+              return rv;
+            }
+            public boolean needsNeg(AstNode node)
+            { if(nodeNeedsNeg(node)) return true;
+              ast.AstNode[] child = node.children();
+              for(int i=0;i<child.length;++i)
+                if(nodeNeedsNeg(child[i])) return true;
+              return false;
+            }
+            public boolean nodeNeedsNeg(AstNode node)
+              { return reducerMain.nodeValueLowerLim(node)<0; }
+            public int abs(int x) { return x<0?-x:x; }
+
+            public int bitsFor(ast.AstNode node) { 
+                              //ast.AstReducer.REDUCE_DISABLED = true;		// HACK
+                              //sw.reduce(node);
+              int rv = bitsForOneNode(node);
+              boolean oneMore = nodeNeedsNeg(node);
+              ast.AstNode[] child = node.children();
+              for(int i=0;i<child.length;++i) 
+              { int t = bitsForOneNode(child[i]);
+                if(t>rv) rv=t;
+                oneMore = oneMore || nodeNeedsNeg(child[i]);
+              }
+              return oneMore?rv+1:rv;
+            }
+          };
+        
+        private AstGCExecutor.BitSizeCalculator bscalced
+          = new AstGCExecutor.BitSizeCalculator() {
+            public int bitCount(int value) {
+              int rv=0;
+              assert value>=0: value;
+              while(value!=0) { value>>=1; rv++; }
+              return rv==0?1:rv;
+            }
+            public boolean needsNeg(AstNode node)
+              { return reducerMain.nodeValueLowerLim(node)<0; }
+            public int abs(int x) { return x<0?-x:x; }
+
+            public int bitsFor(ast.AstNode node) { 
+			  //ast.AstReducer.REDUCE_DISABLED=true;	// HACK
+			  //editDistanceAst.reduce(node);		//
+              int rv = bitCount(reducerMain.nodeValueUpperLim(node));
+              boolean oneMore = needsNeg(node);
+              ast.AstNode[] child = node.children();
+              for(int i=0;i<child.length;++i) 
+              {
+                int t = bitCount(reducerMain.nodeValueUpperLim(child[i]));
+                if(t>rv) rv=t;
+                oneMore = oneMore || needsNeg(child[i]);
+              }
+              return oneMore?rv+1:rv;
+            }
+          };
+	private void updateStats(AbsorbStat info, AstNode node)
 	{	if(info.absorbsA==true) ++statA;
 		if(info.absorbsB==true) ++statB;
 	}

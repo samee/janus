@@ -9,7 +9,7 @@ import ast.apps.AstSWSimilarityReducer;
 public class AstReducer {
 	// We still need to propagate limits for circuit generator
 	//   even if reductions is disabled (for performance evaluations only)
-	public static boolean REDUCE_DISABLED = false;		// HACK: removed final
+	public static boolean REDUCE_DISABLED = true;		// HACK: removed final
 	public static final boolean LOCALITY_ENABLED = true
       && AstNode.LOCAL_EVAL_ENABLED;
 	AstValueReducer valueHelper = new AstValueReducer();
@@ -43,8 +43,8 @@ public class AstReducer {
 	// Does min() --> reduce(add(add(min(),+1),-1))
 	// Helps activate the add(min(add())) rules even when min() is root
 	public void reduceRoot(AstNode root) {
-		if(REDUCE_DISABLED) return;
-		AstLocalAbsorb absorber = new AstLocalAbsorb(root,this);
+//		if(REDUCE_DISABLED) return;
+                if(!REDUCE_DISABLED){
 		if(root.needsGarbled()||!LOCALITY_ENABLED)
 		{	AstNode addchild1[] = { root, AstValueNode.create(+1) };
 			AstNode add1 = AstAddNode.create(addchild1);
@@ -54,7 +54,9 @@ public class AstReducer {
 			root.setData(add2.getData());
 		}
 		removeDuplicates(root);
-		System.err.println("Absorbs: "+absorber.statA+" "+absorber.statB
+        }
+		AstLocalAbsorb absorber = new AstLocalAbsorb(root,this);
+		System.err.println("Absorbs: "+absorber.garbledTotal
 				+" "+AstNodeCounter.count(root));
 	}
 

@@ -69,7 +69,7 @@ class TestSWClient {
                 BigInteger ones = BigInteger.valueOf((1 << SmithWatermanCommon.sigma) - 1);
                 for (int i = 0; i < n; i++) {
                   secMask = secMask.shiftLeft(SmithWatermanCommon.sigma);
-                  if(rnd.nextFloat()<1.05)
+                  if(rnd.nextFloat()<.15)
                     secMask = secMask.or(ones);
                 }
 	}

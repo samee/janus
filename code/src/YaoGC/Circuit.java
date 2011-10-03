@@ -19,12 +19,14 @@ abstract public class Circuit implements TransitiveObserver {
 	public static ObjectInputStream ois = null;
 
 	private int inputWireCount = 0;
-        public static int nonFreeGateCount, collapseShortcutCount;
+        public static int nonFreeGateCount, collapseShortcutCount,
+               nonfreeBuilt;
 
         public static void resetStats()
         {
           nonFreeGateCount=0;
           collapseShortcutCount=0;
+          nonfreeBuilt=0;
         }
 
 	public Circuit(int inDegree, int outDegree, String name) {
