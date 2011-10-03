@@ -15,6 +15,7 @@ class TestEDServer {
 	static BigInteger dna;
 	static BigInteger secMask;
 	static boolean autogen;
+        static double prob;
 	static int n;
 
 	static Random rnd = new Random(0);
@@ -36,6 +37,8 @@ class TestEDServer {
 				.addIntegerOption('g', "sigma");
                 CmdLineParser.Option optionSeed 
                   = parser.addLongOption('q',"seed");
+                CmdLineParser.Option optionSecretProb
+                  = parser.addLongOption('p',"probability");
 
 		try {
 			parser.parse(args);
@@ -45,6 +48,7 @@ class TestEDServer {
 			System.exit(2);
 		}
 
+                prob = (Double) parser.getOptionValue(optionSecretProb,0.5);
 		autogen = (Boolean) parser.getOptionValue(optionAuto, false);
 		n = ((Integer) parser.getOptionValue(optionDNALength, new Integer(100)))
 				.intValue();
@@ -71,7 +75,7 @@ class TestEDServer {
                 BigInteger ones = BigInteger.valueOf((1 << EditDistanceCommon.sigma) - 1);
                 for (int i = 0; i < n; i++) {
                   secMask = secMask.shiftLeft(EditDistanceCommon.sigma);
-                  if(rnd.nextFloat()<.1)
+                  if(rnd.nextFloat()<prob)
                     secMask = secMask.or(ones);
                 }
 		// dna = EditDistanceServer.getDNAString(r, n);

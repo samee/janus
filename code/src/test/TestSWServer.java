@@ -16,6 +16,7 @@ class TestSWServer {
 	static BigInteger secMask;
 	static boolean autogen;
 	static int n;
+        static double prob;
 
 	static Random rnd = new Random(0);
 
@@ -36,6 +37,8 @@ class TestSWServer {
 				.addIntegerOption('g', "sigma");
                 CmdLineParser.Option optionSeed 
                   = parser.addLongOption('q',"seed");
+                CmdLineParser.Option optionSecretProb
+                  = parser.addLongOption('p',"probability");
 
 		try {
 			parser.parse(args);
@@ -61,7 +64,7 @@ class TestSWServer {
                 BigInteger ones = BigInteger.valueOf((1 << SmithWatermanCommon.sigma) - 1);
                 for (int i = 0; i < n; i++) {
                   secMask = secMask.shiftLeft(SmithWatermanCommon.sigma);
-                  if(rnd.nextFloat()<.15)
+                  if(rnd.nextFloat()<prob)
                     secMask = secMask.or(ones);
                 }
 		// dna = SmithWatermanServer.getDNAString(r, n);

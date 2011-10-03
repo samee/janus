@@ -15,6 +15,7 @@ class TestSWClient {
 	static BigInteger dna;
 	static BigInteger secMask;
 	static boolean autogen;
+        static double prob;
 	static int n;
 
 	static Random rnd = new Random();
@@ -40,6 +41,8 @@ class TestSWClient {
 				.addIntegerOption('g', "sigma");
                 CmdLineParser.Option optionSeed 
                   = parser.addLongOption('q',"seed");
+                CmdLineParser.Option optionSecretProb
+                  = parser.addLongOption('p',"probability");
 
 		try {
 			parser.parse(args);
@@ -49,6 +52,7 @@ class TestSWClient {
 			System.exit(2);
 		}
 
+                prob = (Double) parser.getOptionValue(optionSecretProb,0.5);
 		autogen = (Boolean) parser.getOptionValue(optionAuto, false);
 		n = ((Integer) parser.getOptionValue(optionDNALength, new Integer(100)))
 				.intValue();
@@ -69,7 +73,7 @@ class TestSWClient {
                 BigInteger ones = BigInteger.valueOf((1 << SmithWatermanCommon.sigma) - 1);
                 for (int i = 0; i < n; i++) {
                   secMask = secMask.shiftLeft(SmithWatermanCommon.sigma);
-                  if(rnd.nextFloat()<.15)
+                  if(rnd.nextFloat()<prob)
                     secMask = secMask.or(ones);
                 }
 	}
